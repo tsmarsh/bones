@@ -1,0 +1,85 @@
+# Build artifacts and generated files
+build/
+*.pdf
+*.aux
+*.log
+*.toc
+*.tex
+*.docx
+combined.md
+
+# Pandoc temporary files
+*.tmp
+*.temp
+
+# LaTeX auxiliary files
+*.aux
+*.bbl
+*.blg
+*.fdb_latexmk
+*.fls
+*.synctex.gz
+*.toc
+*.out
+*.nav
+*.snm
+*.vrb
+
+# Editor and IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Backup files
+*.bak
+*.backup
+*.orig
+
+# Temporary files
+*.tmp
+*.temp
+temp/
+tmp/
+
+# Log files
+*.log
+logs/
+
+# Node modules (if any JavaScript tools are added later)
+node_modules/
+
+# Python (if any Python tools are added later)
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Rust (if any Rust tools are added later)
+target/
+Cargo.lock
+
+# Go (if any Go tools are added later)
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
