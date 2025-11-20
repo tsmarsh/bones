@@ -10,12 +10,12 @@ git clone https://github.com/yourusername/bones.git
 cd bones
 sudo make install
 
-# Create a book project anywhere
-mkdir ~/my-book && cd ~/my-book
-mkdir chapters
+# Create and initialize a new book project
+mkdir ~/my-novel && cd ~/my-novel
+bones init       # Creates structure, sample files, git repo, and GitHub Actions
 
-# Write your chapters as markdown files
-echo "# Chapter 1" > chapters/01-intro.md
+# Start writing
+vim chapters/01-chapter-one.md
 
 # Build your book
 bones pdf        # Generate PDF
@@ -139,6 +139,7 @@ my-book/
 
 | Target | Description |
 |--------|-------------|
+| `init` | Initialize a new book project with structure and templates |
 | `pdf` | Generate PDF (default) |
 | `epub` | Generate EPUB |
 | `docx` | Generate DOCX |
@@ -237,19 +238,36 @@ export PATH="$HOME/local/bin:$PATH"
 
 ## Usage
 
+### Initializing a New Project
+
+The easiest way to start a new book project is with `bones init`:
+
+```bash
+mkdir my-novel && cd my-novel
+bones init
+```
+
+This command will:
+1. Initialize a git repository (if not already initialized)
+2. Create the directory structure (`chapters/`, `outlines/`, `cover/`)
+3. Generate a sample first chapter with helpful tips
+4. Create a book outline template
+5. Add a `.gitignore` file configured for book projects
+6. Create a local `Makefile` for customization
+7. Set up GitHub Actions workflow for CI/CD
+8. Make an initial git commit
+
+**Safety:** If a `chapters/` directory already exists, `bones init` will warn you and exit to prevent overwriting your work. Use `bones init FORCE=1` to override.
+
 ### Quick Start
 
 ```bash
-# 1. Create a book project
+# 1. Create and initialize a new book project
 mkdir my-novel && cd my-novel
-mkdir chapters
+bones init
 
-# 2. Write your first chapter
-cat > chapters/01-beginning.md <<'EOF'
-# Chapter 1: The Beginning
-
-It was a dark and stormy night...
-EOF
+# 2. Edit the sample chapter or add more
+vim chapters/01-chapter-one.md
 
 # 3. Build the book
 bones pdf
@@ -258,6 +276,15 @@ bones pdf
 open book.pdf  # macOS
 xdg-open book.pdf  # Linux
 ```
+
+**What `bones init` creates:**
+- `chapters/` directory with a sample first chapter
+- `outlines/` directory with a book outline template
+- `cover/` directory for your cover image
+- `.gitignore` configured for book projects
+- `Makefile` for easy customization
+- `.github/workflows/ci.yml` for automatic builds and releases
+- Git repository with initial commit
 
 ### Configuration
 

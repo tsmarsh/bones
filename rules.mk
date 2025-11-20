@@ -78,10 +78,11 @@ txt:  $(TXT_TARGETS)
 mp3:  $(MP3_TARGETS)
 
 # Helper targets
-.PHONY: help check-tools list clean distclean clean.mp3 lineedit copyedit
+.PHONY: help check-tools list clean distclean clean.mp3 lineedit copyedit init
 
 help:
 	@echo "Available targets:"
+	@echo "  init     - Initialize a new book project"
 	@echo "  pdf      - Build PDF (default)"
 	@echo "  tex      - Generate LaTeX"
 	@echo "  docx     - Build DOCX"
@@ -253,6 +254,260 @@ copyedit:
 	@echo "Review the suggestions:"
 	@echo "  ls build/reviews/"
 	@echo "  cat build/reviews/0-prologue-review.md"
+
+# ===================== Project Initialization =====================
+FORCE ?=
+
+# Init depends on all scaffolding targets
+init: .git chapters outlines cover .gitignore Makefile .github/workflows/ci.yml
+	@echo ""
+	@echo "======================================================================"
+	@echo "  ✓ Project initialized successfully!"
+	@echo "======================================================================"
+	@echo ""
+	@echo "Directory structure created:"
+	@echo "  chapters/        - Your markdown chapter files"
+	@echo "  outlines/        - Style guides and book metadata"
+	@echo "  cover/           - Place your cover.png here"
+	@echo "  .github/         - GitHub Actions workflow for CI/CD"
+	@echo ""
+	@echo "Files created:"
+	@echo "  chapters/01-chapter-one.md  - Sample first chapter"
+	@echo "  outlines/outline.md         - Book outline and style guide"
+	@echo "  cover/cover.png             - Default cover (replace with your own)"
+	@echo "  .gitignore                  - Ignore build artifacts"
+	@echo "  Makefile                    - Local build configuration"
+	@echo "  .github/workflows/ci.yml    - Auto-build and release workflow"
+	@echo ""
+	@echo "Next steps:"
+	@echo "  1. Edit chapters/01-chapter-one.md or add new chapters"
+	@echo "  2. Update outlines/outline.md with your book information"
+	@echo "  3. Run 'bones pdf' or 'make pdf' to build your first PDF"
+	@echo "  4. Run 'bones help' to see all available commands"
+	@echo ""
+	@echo "GitHub integration:"
+	@echo "  - Push to GitHub to trigger automatic PDF builds"
+	@echo "  - Create a tag (e.g., v1.0) to create a release with PDF"
+	@echo "  - Update the bones repo URL in .github/workflows/ci.yml"
+	@echo ""
+	@# Initial commit
+	@echo "• Creating initial commit"
+	@git add .gitignore Makefile chapters/ outlines/ cover/ .github/
+	@git commit -m "Initial bones project setup" || true
+
+# Git repository initialization
+.git:
+	@if [ -d "chapters" ] && [ -z "$(FORCE)" ]; then \
+		echo "======================================================================";\
+		echo "  Bones Project Initialization";\
+		echo "======================================================================";\
+		echo "";\
+		echo "Error: chapters/ directory already exists."; \
+		echo "This appears to be an existing project."; \
+		echo ""; \
+		echo "To reinitialize anyway, run: bones init FORCE=1"; \
+		exit 1; \
+	fi
+	@echo "======================================================================"
+	@echo "  Bones Project Initialization"
+	@echo "======================================================================"
+	@echo ""
+	@echo "• Initializing git repository"
+	@git init
+
+# Sample chapter with template content
+chapters: | .git
+	@echo "• Creating chapters/ directory"
+	@mkdir -p chapters
+	@printf '%s\n' \
+		'# Chapter 1: The Beginning' \
+		'' \
+		'Your story starts here...' \
+		'' \
+		'This is a sample chapter to help you get started. Replace this content' \
+		'with your own writing.' \
+		'' \
+		'## Writing Tips' \
+		'' \
+		'- Each `.md` file in the `chapters/` directory becomes part of your book' \
+		'- Files are sorted naturally, so use numeric prefixes (01-, 02-, etc.)' \
+		'- Use standard Markdown formatting' \
+		'- Run `bones pdf` to build your book' \
+		'' \
+		'## Next Steps' \
+		'' \
+		'1. Edit this file or create new chapter files' \
+		'2. Add your book metadata and outlines in `outlines/`' \
+		'3. Run `bones pdf` to generate your first PDF' \
+		'4. Use `bones help` to see all available commands' \
+		> chapters/01-chapter-one.md
+
+# Outlines directory with template
+outlines: | .git
+	@echo "• Creating outlines/ directory"
+	@mkdir -p outlines
+	@printf '%s\n' \
+		'# Book Outline' \
+		'' \
+		'This directory contains your book metadata, style guides, and reference' \
+		'materials. These files are used by the AI copy editor to maintain' \
+		'consistency across your book.' \
+		'' \
+		'## Book Information' \
+		'' \
+		'**Title:** Your Book Title' \
+		'**Author:** Your Name' \
+		'**Genre:** [Your Genre]' \
+		'**Target Audience:** [Your Audience]' \
+		'' \
+		'## Story Outline' \
+		'' \
+		'### Act 1' \
+		'- Chapter 1: Introduction' \
+		'- Chapter 2: ...' \
+		'' \
+		'### Act 2' \
+		'- Chapter 3: ...' \
+		'' \
+		'### Act 3' \
+		'- Chapter 4: Resolution' \
+		'' \
+		'## Style Guide' \
+		'' \
+		'- Point of view: [First/Third person]' \
+		'- Tense: [Past/Present]' \
+		'- Tone: [Serious/Humorous/etc.]' \
+		'- Voice: [Active/Passive]' \
+		> outlines/outline.md
+
+# Cover directory with default cover
+cover: | .git
+	@echo "• Creating cover/ directory with default cover"
+	@mkdir -p cover
+	@cp -n $(BONES_HOME)cover.png cover/cover.png
+
+# Project .gitignore
+.gitignore: | .git
+	@echo "• Creating .gitignore"
+	@printf '%s\n' \
+		'# Build artifacts and generated files' \
+		'build/' \
+		'*.pdf' \
+		'*.aux' \
+		'*.log' \
+		'*.toc' \
+		'*.tex' \
+		'*.docx' \
+		'*.epub' \
+		'combined.md' \
+		'' \
+		'# Pandoc temporary files' \
+		'*.tmp' \
+		'*.temp' \
+		'' \
+		'# LaTeX auxiliary files' \
+		'*.aux' \
+		'*.bbl' \
+		'*.blg' \
+		'*.fdb_latexmk' \
+		'*.fls' \
+		'*.synctex.gz' \
+		'*.toc' \
+		'*.out' \
+		'*.nav' \
+		'*.snm' \
+		'*.vrb' \
+		'' \
+		'# Editor and IDE files' \
+		'.vscode/' \
+		'.idea/' \
+		'*.swp' \
+		'*.swo' \
+		'*~' \
+		'.DS_Store' \
+		'Thumbs.db' \
+		> .gitignore
+
+# Local Makefile wrapper
+Makefile: | .git
+	@echo "• Creating Makefile"
+	@printf '%s\n' \
+		'# Include bones build rules' \
+		'# This allows you to use "make pdf" instead of "bones pdf"' \
+		'# and customize variables for your project' \
+		'' \
+		'# Detect bones installation' \
+		'BONES_RULES := $$(shell command -v bones >/dev/null 2>&1 && bones --print-rules 2>/dev/null || echo /usr/local/share/bones/rules.mk)' \
+		'' \
+		'# If bones --print-rules is not available, fall back to standard location' \
+		'ifeq ($$(BONES_RULES),)' \
+		'  BONES_RULES := /usr/local/share/bones/rules.mk' \
+		'endif' \
+		'' \
+		'include $$(BONES_RULES)' \
+		'' \
+		'# Customize your build here (optional)' \
+		'# PDF_OUTPUT = my-book.pdf' \
+		'# SRC_DIR = manuscript' \
+		'# PANDOC_COMMON_FLAGS += -V author="Your Name"' \
+		> Makefile
+
+# GitHub Actions workflow
+.github/workflows/ci.yml: | .git
+	@echo "• Creating GitHub Actions workflow"
+	@mkdir -p .github/workflows
+	@printf '%s\n' \
+		'name: Build and Release Book' \
+		'' \
+		'on:' \
+		'  push:' \
+		'    branches: [ main ]' \
+		'    tags:' \
+		'      - "v*"' \
+		'  pull_request:' \
+		'    branches: [ main ]' \
+		'  workflow_dispatch:' \
+		'' \
+		'jobs:' \
+		'  build:' \
+		'    runs-on: ubuntu-latest' \
+		'    steps:' \
+		'      - name: Checkout code' \
+		'        uses: actions/checkout@v4' \
+		'' \
+		'      - name: Install dependencies' \
+		'        run: |' \
+		'          sudo apt-get update' \
+		'          sudo apt-get install -y pandoc' \
+		'          # Install Tectonic for PDF generation' \
+		'          wget https://github.com/tectonic-typesetting/tectonic/releases/download/tectonic%400.15.0/tectonic-0.15.0-x86_64-unknown-linux-gnu.tar.gz' \
+		'          tar -xzf tectonic-0.15.0-x86_64-unknown-linux-gnu.tar.gz' \
+		'          sudo mv tectonic /usr/local/bin/' \
+		'          sudo chmod +x /usr/local/bin/tectonic' \
+		'' \
+		'      - name: Install Bones' \
+		'        run: |' \
+		'          git clone https://github.com/yourusername/bones.git /tmp/bones' \
+		'          cd /tmp/bones' \
+		'          sudo make install' \
+		'' \
+		'      - name: Build PDF' \
+		'        run: bones pdf' \
+		'' \
+		'      - name: Upload PDF artifact' \
+		'        uses: actions/upload-artifact@v4' \
+		'        with:' \
+		'          name: book-pdf' \
+		'          path: book.pdf' \
+		'' \
+		'      - name: Create Release' \
+		'        if: startsWith(github.ref, '\''refs/tags/'\'')' \
+		'        uses: softprops/action-gh-release@v1' \
+		'        with:' \
+		'          files: book.pdf' \
+		'        env:' \
+		'          GITHUB_TOKEN: $${{ secrets.GITHUB_TOKEN }}' \
+		> .github/workflows/ci.yml
 
 # ===================== Cleaning =====================
 clean: clean.mp3
