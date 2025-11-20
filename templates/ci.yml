@@ -22,10 +22,9 @@ jobs:
           sudo apt-get install -y pandoc
 
       - name: Setup Tectonic
-        uses: wtfjoke/setup-tectonic@v2 # Use the setup-tectonic action
+        uses: wtfjoke/setup-tectonic@v2
         with:
-          tectonic-version: latest # Specify the Tectonic version (e.g., 'latest' or a specific version like '0.12.0')
-          biber-version: latest # Optionally, setup Biber for bibliography processing
+          github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Install Bones
         run: |

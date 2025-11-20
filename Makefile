@@ -55,6 +55,7 @@ install:
 	@cp -f cover.png $(INSTALL_DIR)/cover.png
 	@echo "  • Installing zsh completion → $(PREFIX)/share/zsh/site-functions/"
 	@cp -f completions/_bones $(PREFIX)/share/zsh/site-functions/_bones
+	@chmod 644 $(PREFIX)/share/zsh/site-functions/_bones
 	@# Create bones wrapper script
 	@echo "  • Creating bones command → $(BONES_BIN)"
 	@printf '%s\n' \

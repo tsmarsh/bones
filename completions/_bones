@@ -1,6 +1,9 @@
 #compdef bones
 
 _bones() {
+  local curcontext="$curcontext" state line
+  typeset -A opt_args
+
   local -a commands
   commands=(
     'init:Initialize a new book project'
@@ -20,7 +23,13 @@ _bones() {
     'check-tools:Check for required tools'
   )
 
-  _describe 'command' commands
+  _arguments '1: :->command'
+
+  case $state in
+    command)
+      _describe 'bones command' commands
+      ;;
+  esac
 }
 
 _bones "$@"
