@@ -4,9 +4,10 @@ This directory contains professional-grade scripts for AI-assisted publishing wo
 
 ## Scripts Overview
 
-### **Core LLM Scripts**
-- **`line_editor.py`** - Professional line editor with CriticMarkup support
-- **`llm_ssml_generator.py`** - LLM-powered SSML generation for speech synthesis
+### **Core Scripts**
+- **`llm_client.py`** - Shared LLM client with multi-backend support (ollama, openai, anthropic)
+- **`line_editor.py`** - Professional line editor for fiction
+- **`copy_editor.py`** - Copy editor with style guide and context awareness
 - **`llm_elevenlabs_tts.py`** - Enhanced ElevenLabs TTS with intelligent chunking
 
 ### **Utility Scripts**
@@ -18,61 +19,72 @@ All scripts are designed to work with the main Makefile. Use the make targets in
 
 ```bash
 # Line editing
-make edit-lines        # Apply line editing
-make edit-lines-diff   # Preview changes
+make lineedit          # Apply line edits to all chapters
 
-# SSML generation
-make ssml              # Generate SSML files
-make ssml-audio        # Generate SSML in build/audio/
+# Copy editing
+make copyedit          # Generate copy edit reviews
 
-# TTS conversion
-make elevenlabs-ssml   # Convert SSML to MP3
+# Text-to-Speech
+make txt               # Generate plain text files for TTS
+make mp3               # Generate MP3 audiobook
+
+# Build outputs
+make pdf               # Build PDF
+make docx              # Build DOCX
+make epub              # Build EPUB
 
 # Clean up
-make clean-ssml        # Clean SSML files
-make clean-ssml-audio  # Clean audio SSML files
-make clean-elevenlabs-ssml  # Clean MP3 files
-make clean-edited      # Clean edited files
+make clean             # Remove build artifacts
+make clean.mp3         # Remove MP3 files
 ```
 
 ## Features
 
-### **Professional Line Editor**
-- **CriticMarkup Integration** - Industry-standard tracked changes
-- **Content Protection** - Preserves code, links, tables
-- **LLM Intelligence** - Real AI-powered editing
-- **Flexible Backends** - Ollama or OpenAI
+### **Line Editor**
+- **Professional Fiction Editing** - Improves clarity, grammar, flow, and word choice
+- **Voice Preservation** - Maintains author's unique style
+- **Multi-Backend Support** - Works with Ollama, OpenAI, or Anthropic
+- **In-Place Editing** - Directly updates chapter files
 
-### **LLM SSML Generator**
-- **Smart Content Masking** - Protects non-prose content
-- **Intelligent Chunking** - Handles long documents
-- **Professional SSML** - Clean, valid markup
-- **Flexible Backends** - Ollama or OpenAI
+### **Copy Editor**
+- **Context-Aware** - Loads style guide and world-building from outlines/
+- **Consistency Checking** - Ensures character voices and terminology match
+- **Review Generation** - Creates detailed reviews with specific suggestions
+- **Multi-Backend Support** - Works with Ollama, OpenAI, or Anthropic
 
-### **Enhanced ElevenLabs TTS**
-- **Intelligent Chunking** - Splits long SSML automatically
-- **Audio Concatenation** - Seamlessly combines chunks
+### **LLM Client**
+- **Multi-Backend** - Unified interface for ollama, openai, anthropic
+- **Retry Logic** - Exponential backoff for rate limiting
+- **Timeout Handling** - Prevents hanging on slow requests
+- **Clean API** - Simple, consistent interface
+
+### **ElevenLabs TTS**
+- **Plain Text Conversion** - Markdown → clean text for TTS
 - **Error Handling** - Retry logic with exponential backoff
 - **Quota Management** - Handles API limits gracefully
+- **Per-Chapter Processing** - Generates individual MP3 files
 
 ## Configuration
 
 ### **Environment Variables**
 ```bash
-# LLM Backend
-export LLM_BACKEND=ollama          # or openai
-export LLM_MODEL=llama3.1:8b       # or your preferred model
+# LLM Backend Configuration
+export LLM_BACKEND=anthropic       # or ollama, openai
+export LLM_MODEL=claude-3-7-sonnet-20250219
 
-# ElevenLabs
-export ELEVENLABS_API_KEY=your_key_here
-export ELEVENLABS_VOICE=Xb7hH8MSUJpSbSDYk0k2  # Alice voice
+# Anthropic API
+export ANTHROPIC_API_KEY=your_key_here
 
-# Ollama
-export OLLAMA_URL=http://localhost:11434/api/generate
-
-# OpenAI
+# OpenAI API (optional)
 export OPENAI_BASE_URL=https://api.openai.com/v1/chat/completions
 export OPENAI_API_KEY=your_key_here
+
+# Ollama (optional)
+export OLLAMA_HOST=http://localhost:11434
+
+# ElevenLabs TTS
+export ELEVENLABS_API_KEY=your_key_here
+export ELEVENLABS_VOICE=Xb7hH8MSUJpSbSDYk0k2  # Alice voice
 ```
 
 ### **Voice Selection**
@@ -96,11 +108,22 @@ ollama pull llama3.1:8b
 
 ## Architecture
 
-All scripts follow the same professional pattern:
-1. **Content Masking** - Protect non-prose content from AI processing
-2. **Intelligent Chunking** - Handle long documents automatically
-3. **LLM Processing** - Use AI for intelligent editing and generation
-4. **Error Handling** - Robust retry logic with exponential backoff
-5. **Professional Output** - Clean, valid results with proper formatting
+### **Shared LLM Client**
+All editing scripts use a common `llm_client.py` module that provides:
+- **Backend Abstraction** - Unified API across different LLM providers
+- **Retry Logic** - Exponential backoff for rate limits (HTTP 429/529)
+- **Timeout Handling** - 120-second timeout prevents hanging
+- **Error Messages** - Clear, actionable error reporting
 
-This ensures consistent, reliable operation across all AI-assisted workflows with professional-grade quality.
+### **Editing Pipeline**
+1. **Load Context** - Read style guide and chapter content
+2. **LLM Processing** - Send to configured backend for editing/review
+3. **Post-Processing** - Clean up markdown fences and formatting
+4. **Output** - Write edited content or review to disk
+
+### **TTS Pipeline**
+1. **Text Extraction** - Convert markdown to plain text via Pandoc
+2. **API Request** - Send to ElevenLabs with retry logic
+3. **MP3 Generation** - Receive and save audio file
+
+All scripts include comprehensive doctests and follow Python best practices.

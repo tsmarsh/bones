@@ -16,6 +16,7 @@ COMBINED_MD   ?= $(OBJ_DIR)/combined.md
 TEX_OUTPUT    ?= $(OBJ_DIR)/book.tex
 TEX_BASENAME  := $(basename $(notdir $(TEX_OUTPUT)))
 PDF_BUILD     ?= $(OBJ_DIR)/$(TEX_BASENAME).pdf
+COVER_JPG     ?= $(BUILD_DIR)/cover.jpg
 
 # Text / audio
 TXT_DIR       ?= $(OBJ_DIR)/txt
@@ -52,10 +53,12 @@ PANDOC_COMMON_FLAGS += \
   -V papersize=6in,9in \
   -V secnumdepth=0
 
+COVER_HEADER := $(OBJ_DIR)/cover-header.tex
+
 # ===================== Defaults & safety =====================
 .DEFAULT_GOAL := pdf
 .DELETE_ON_ERROR:
-.SECONDARY: $(COMBINED_MD) $(TEX_OUTPUT) $(PDF_BUILD)
+.SECONDARY: $(COMBINED_MD) $(TEX_OUTPUT) $(PDF_BUILD) $(COVER_JPG) $(COVER_HEADER)
 .SECONDEXPANSION:                    # enables $$ expansion in prerequisites
 
 # ===================== Short, descriptive targets =====================
@@ -113,6 +116,27 @@ list: $(MANIFEST)
 $(BUILD_DIR) $(OBJ_DIR) $(TXT_DIR) $(MP3_DIR):
 	@mkdir -p $@
 
+# Cover image: PNG → JPEG
+$(COVER_JPG): cover/cover.png | $(BUILD_DIR)
+	@echo "• Converting cover → $@"
+	@ffmpeg -i "$<" -q:v 2 -y "$@"
+
+# Cover header for LaTeX
+$(COVER_HEADER): $(COVER_JPG) | $(OBJ_DIR)
+	@echo "• Generating cover header → $@"
+	@cp -f $(COVER_JPG) $(OBJ_DIR)/cover.jpg
+	@printf '%s\n' \
+		'\usepackage{graphicx}' \
+		'\usepackage{eso-pic}' \
+		'\AtBeginDocument{' \
+		'  \clearpage' \
+		'  \thispagestyle{empty}' \
+		'  \AddToShipoutPictureBG*{\includegraphics[width=\paperwidth,height=\paperheight]{cover.jpg}}' \
+		'  \mbox{}' \
+		'  \clearpage' \
+		'}' \
+		> $@
+
 # Manifest: ordered chapter list (version sort)
 $(MANIFEST): | $(OBJ_DIR)
 	@echo "• Scanning $(SRC_DIR) → $@"
@@ -134,14 +158,14 @@ $(COMBINED_MD): $(MANIFEST) $(DEPFILE) | $(OBJ_DIR)
 	@awk 'NR==FNR{a[NR]=$$0; n=NR; next} \
 	     END{for(i=1;i<=n;i++){ \
 	            system("cat \"" a[i] "\""); \
-	            if(i<n) print "\n\\\\newpage\n" \
+	            if(i<n) print "\n```{=latex}\n\\newpage\n```\n" \
 	         }}' $(MANIFEST) /dev/null > $@.tmp
 	@mv $@.tmp $@
 
 # LaTeX from combined markdown
-$(TEX_OUTPUT): $(COMBINED_MD) | $(OBJ_DIR)
+$(TEX_OUTPUT): $(COMBINED_MD) $(COVER_HEADER) | $(OBJ_DIR)
 	@echo "• Generating LaTeX → $@"
-	$(PANDOC) -s -t latex $(PANDOC_COMMON_FLAGS) -o $@ $(COMBINED_MD)
+	$(PANDOC) -s -t latex $(PANDOC_COMMON_FLAGS) --include-in-header=$(COVER_HEADER) -o $@ $(COMBINED_MD)
 
 # PDF from TeX (tectonic preferred; otherwise run engine twice)
 $(PDF_OUTPUT): $(TEX_OUTPUT)
@@ -191,7 +215,7 @@ lineedit:
 	@for src in $(CHAPTER_SOURCES); do \
 		python3 $(SCRIPTS_DIR)/line_editor.py "$$src"; \
 	done
-	@git add $(SRC_DIR)/*.md
+	@git add $(CHAPTER_SOURCES)
 	@git commit -m "LLM line edits - review before merging"
 	@echo ""
 	@echo "✓ Edits committed to branch $(EDIT_BRANCH)"
@@ -216,30 +240,16 @@ copyedit:
 		echo "Error: Outlines directory not found at $(OUTLINES_DIR)"; \
 		exit 1; \
 	fi
-	@echo "• Creating branch $(COPYEDIT_BRANCH)"
-	@git checkout -b $(COPYEDIT_BRANCH)
+	@echo "• Generating copy edit reviews"
 	@for src in $(CHAPTER_SOURCES); do \
 		python3 $(SCRIPTS_DIR)/copy_editor.py "$$src" --outlines-dir "$(OUTLINES_DIR)"; \
 	done
-	@git add $(SRC_DIR)/*.md
-	@git commit -m "LLM copy edits with style guide - review before merging"
 	@echo ""
-	@echo "✓ Copy edits committed to branch $(COPYEDIT_BRANCH)"
+	@echo "✓ Reviews saved to build/reviews/"
 	@echo ""
-	@echo "Review changes with:"
-	@echo "  git diff main"
-	@echo "  git log -p"
-	@echo ""
-	@echo "To accept all changes:"
-	@echo "  git checkout main && git merge $(COPYEDIT_BRANCH)"
-	@echo ""
-	@echo "To selectively accept changes:"
-	@echo "  git checkout main"
-	@echo "  git checkout -p $(COPYEDIT_BRANCH) -- $(SRC_DIR)"
-	@echo "  git commit -m 'Apply selected copy edits'"
-	@echo ""
-	@echo "To reject:"
-	@echo "  git checkout main && git branch -D $(COPYEDIT_BRANCH)"
+	@echo "Review the suggestions:"
+	@echo "  ls build/reviews/"
+	@echo "  cat build/reviews/0-prologue-review.md"
 
 # ===================== Cleaning =====================
 clean: clean.mp3
