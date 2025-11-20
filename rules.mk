@@ -7,6 +7,7 @@ BUILD_DIR     ?= build
 OBJ_DIR       := $(BUILD_DIR)/obj
 SCRIPTS_DIR   ?= $(BONES_HOME)scripts
 OUTLINES_DIR  ?= outlines
+FONTS_DIR     ?= fonts
 
 MANIFEST      := $(OBJ_DIR)/chapters.txt   # ordered list of chapter sources
 DEPFILE       := $(OBJ_DIR)/combined.d     # auto deps for combined.md
@@ -38,6 +39,27 @@ PANDOC_COMMON_FLAGS ?= --toc
 DOC_CLASS     ?= book
 TOP_LEVEL_DIV ?= chapter
 
+# Font detection: look for fonts in fonts/ directory
+# Expected filenames: main.ttf, main.otf, sans.ttf, sans.otf, mono.ttf, mono.otf, cjk.ttf, cjk.otf
+MAIN_FONT := $(firstword $(wildcard $(FONTS_DIR)/main.ttf $(FONTS_DIR)/main.otf))
+SANS_FONT := $(firstword $(wildcard $(FONTS_DIR)/sans.ttf $(FONTS_DIR)/sans.otf))
+MONO_FONT := $(firstword $(wildcard $(FONTS_DIR)/mono.ttf $(FONTS_DIR)/mono.otf))
+CJK_FONT  := $(firstword $(wildcard $(FONTS_DIR)/cjk.ttf $(FONTS_DIR)/cjk.otf))
+
+# Build font flags dynamically
+ifneq ($(MAIN_FONT),)
+  FONT_FLAGS += -V mainfont="$(abspath $(MAIN_FONT))"
+endif
+ifneq ($(SANS_FONT),)
+  FONT_FLAGS += -V sansfont="$(abspath $(SANS_FONT))"
+endif
+ifneq ($(MONO_FONT),)
+  FONT_FLAGS += -V monofont="$(abspath $(MONO_FONT))"
+endif
+ifneq ($(CJK_FONT),)
+  FONT_FLAGS += -V CJKmainfont="$(abspath $(CJK_FONT))"
+endif
+
 PANDOC_COMMON_FLAGS += \
   -V documentclass=$(DOC_CLASS) \
   --top-level-division=$(TOP_LEVEL_DIV) \
@@ -50,7 +72,8 @@ PANDOC_COMMON_FLAGS += \
   -V linkcolor=MidnightBlue \
   -V urlcolor=RoyalBlue \
   -V papersize=6in,9in \
-  -V secnumdepth=0
+  -V secnumdepth=0 \
+  $(FONT_FLAGS)
 
 COVER_HEADER := $(OBJ_DIR)/cover-header.tex
 
@@ -256,7 +279,7 @@ copyedit:
 FORCE ?=
 
 # Init depends on all scaffolding targets
-init: .git chapters outlines cover .gitignore Makefile .github/workflows/ci.yml
+init: .git chapters outlines cover fonts .gitignore Makefile .github/workflows/ci.yml
 	@echo ""
 	@echo "======================================================================"
 	@echo "  ✓ Project initialized successfully!"
@@ -266,6 +289,7 @@ init: .git chapters outlines cover .gitignore Makefile .github/workflows/ci.yml
 	@echo "  chapters/        - Your markdown chapter files"
 	@echo "  outlines/        - Style guides and book metadata"
 	@echo "  cover/           - Place your cover.png here"
+	@echo "  fonts/           - Custom fonts (main.ttf, sans.ttf, mono.ttf, cjk.ttf)"
 	@echo "  .github/         - GitHub Actions workflow for CI/CD"
 	@echo ""
 	@echo "Files created:"
@@ -297,7 +321,7 @@ init: .git chapters outlines cover .gitignore Makefile .github/workflows/ci.yml
 	@echo ""
 	@# Initial commit
 	@echo "• Creating initial commit"
-	@git add .gitignore Makefile chapters/ outlines/ cover/ .github/
+	@git add .gitignore Makefile chapters/ outlines/ cover/ fonts/ .github/
 	@git commit -m "Initial bones project setup" || true
 
 # Git repository initialization
@@ -391,6 +415,40 @@ cover: | .git
 	@mkdir -p cover
 	@cp -n $(BONES_HOME)cover.png cover/cover.png
 
+# Fonts directory with README
+fonts: | .git
+	@echo "• Creating fonts/ directory"
+	@mkdir -p fonts
+	@printf '%s\n' \
+		'# Custom Fonts' \
+		'' \
+		'Place your custom font files here with the following names:' \
+		'' \
+		'- `main.ttf` or `main.otf` - Main body font (serif)' \
+		'- `sans.ttf` or `sans.otf` - Sans-serif font for headings' \
+		'- `mono.ttf` or `mono.otf` - Monospace font for code' \
+		'- `cjk.ttf` or `cjk.otf`   - CJK (Chinese/Japanese/Korean) font' \
+		'' \
+		'Bones will automatically detect and use these fonts in your PDF.' \
+		'If fonts are not provided, Tectonic will use its default fonts.' \
+		'' \
+		'**Important:** Font files should be committed to git so they are' \
+		'available during CI builds. The `.gitignore` is configured to NOT' \
+		'ignore font files in this directory.' \
+		'' \
+		'## Example fonts:' \
+		'' \
+		'- **Serif**: Libertinus Serif, EB Garamond, Crimson Pro' \
+		'- **Sans**: Inter, Source Sans Pro, Open Sans' \
+		'- **Mono**: JetBrains Mono, Fira Code, Inconsolata' \
+		'- **CJK**: Noto Sans CJK, Source Han Sans, Noto Serif CJK' \
+		'' \
+		'## Font licenses' \
+		'' \
+		'Make sure you have the rights to embed fonts in your PDF.' \
+		'Most open-source fonts (SIL OFL, Apache, etc.) allow this.' \
+		> fonts/README.md
+
 # Project .gitignore
 .gitignore: | .git
 	@echo "• Creating .gitignore"
@@ -431,6 +489,9 @@ cover: | .git
 		'*~' \
 		'.DS_Store' \
 		'Thumbs.db' \
+		'' \
+		'# IMPORTANT: Do NOT ignore fonts - they need to be checked in!' \
+		'# fonts/*.ttf and fonts/*.otf should be committed to git' \
 		> .gitignore
 
 # Local Makefile wrapper
