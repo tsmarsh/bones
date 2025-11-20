@@ -71,18 +71,22 @@ class LLMClient:
     def _execute_request(self, req: urllib.request.Request, max_retries: int = 5) -> Dict[str, Any]:
         """
         Execute HTTP request with exponential backoff retry logic.
-        Handles timeouts, rate limits (429), and server errors (5xx).
+        Handles timeouts, rate limits (429), server errors (5xx), and JSON parsing errors.
         """
         for attempt in range(max_retries):
             try:
                 # Timeout set to 120s for long chain-of-thought reasoning
                 with urllib.request.urlopen(req, timeout=120) as r:
-                    return json.loads(r.read().decode('utf-8'))
-            
+                    response_body = r.read().decode('utf-8')
+                    try:
+                        return json.loads(response_body)
+                    except json.JSONDecodeError as e:
+                        raise Exception(f"Failed to parse JSON response: {e}. Response body: {response_body[:500]}")
+
             except urllib.error.HTTPError as e:
                 # Read error body for debugging
                 error_body = e.read().decode('utf-8') if e.fp else "No error details"
-                
+
                 # Retry on Rate Limit (429) or Server Error (5xx)
                 if e.code == 429 or (500 <= e.code < 600):
                     if attempt < max_retries - 1:
@@ -90,10 +94,10 @@ class LLMClient:
                         print(f"  ⚠ API Error {e.code}, retrying in {wait_time}s... (attempt {attempt + 1}/{max_retries})", file=sys.stderr)
                         time.sleep(wait_time)
                         continue
-                
+
                 # Fatal error (400, 401, 403, etc.)
                 raise Exception(f"HTTP {e.code}: {error_body}")
-            
+
             except (urllib.error.URLError, TimeoutError) as e:
                 if attempt < max_retries - 1:
                     wait_time = 2
@@ -101,10 +105,11 @@ class LLMClient:
                     time.sleep(wait_time)
                     continue
                 raise Exception(f"Network failed after {max_retries} attempts: {e}")
-            
+
             except Exception as e:
-                raise Exception(f"Unexpected error: {e}")
-        
+                # Don't retry on unexpected errors (like JSON decode errors)
+                raise Exception(f"Request error: {e}")
+
         raise Exception(f"Failed after {max_retries} attempts")
 
     def _ollama_post(self, system_prompt: str, user_prompt: str) -> str:

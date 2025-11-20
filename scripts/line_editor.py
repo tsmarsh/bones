@@ -5,9 +5,10 @@ Line Editor (LLM-assisted)
 Sends full chapter to LLM for line editing and returns only the edited markdown.
 
 Examples:
-    $ python3 line_editor.py chapter.md
-    $ python3 line_editor.py chapter.md --backend anthropic
-    $ python3 line_editor.py chapter.md -o output.md --instruction "Focus on dialogue"
+    $ python3 line_editor.py chapter.md                    # saves to chapter.edited.md
+    $ python3 line_editor.py chapter.md --overwrite        # overwrites chapter.md
+    $ python3 line_editor.py chapter.md -o output.md       # saves to output.md
+    $ python3 line_editor.py chapter.md --instruction "Focus on dialogue"
 """
 
 import argparse
@@ -83,12 +84,18 @@ def main():
     """
     ap = argparse.ArgumentParser(description="LLM-assisted line editor")
     ap.add_argument("input_file", help="Chapter file to edit")
-    ap.add_argument("-o", "--output", help="Output file (default: overwrite input)")
+    ap.add_argument("-o", "--output", help="Output file (default: input_file.edited.md)")
+    ap.add_argument("--overwrite", action="store_true", help="Overwrite input file instead of creating .edited.md")
     ap.add_argument("--instruction", default="", help="Additional editing guidance")
     ap.add_argument("--backend", choices=["ollama","openai","anthropic"], default=os.environ.get("LLM_BACKEND","anthropic"))
     ap.add_argument("--model", default=os.environ.get("LLM_MODEL","claude-3-7-sonnet-20250219"))
     ap.add_argument("--temperature", type=float, default=0.3)
     args = ap.parse_args()
+
+    # Validate argument combinations
+    if args.output and args.overwrite:
+        print("Error: Cannot use both -o/--output and --overwrite", file=sys.stderr)
+        return 1
 
     # Read input file
     input_path = Path(args.input_file)
@@ -107,10 +114,26 @@ def main():
     # Strip any potential markdown code fences the LLM might add
     edited = strip_markdown_fences(edited)
 
+    # Determine output path with safety checks
+    if args.output:
+        # Explicit output file specified
+        output_path = Path(args.output)
+    elif args.overwrite:
+        # User explicitly wants to overwrite
+        output_path = input_path
+    else:
+        # Safe default: create .edited.md file
+        stem = input_path.stem
+        suffix = input_path.suffix
+        output_path = input_path.with_name(f"{stem}.edited{suffix}")
+
     # Write output
-    output_path = Path(args.output) if args.output else input_path
     output_path.write_text(edited, encoding='utf-8')
-    print(f"✓ Edited → {output_path}", file=sys.stderr)
+
+    if output_path == input_path:
+        print(f"✓ Edited (overwritten) → {output_path}", file=sys.stderr)
+    else:
+        print(f"✓ Edited → {output_path}", file=sys.stderr)
 
     return 0
 
