@@ -434,6 +434,53 @@ ls build/obj/combined.md  # Combined markdown
 ls build/obj/book.tex     # Generated LaTeX
 ```
 
+## GitHub Actions Integration
+
+`bones init` creates GitHub Actions workflows for automated builds and AI-powered editing:
+
+### Automatic Workflows
+
+**ci.yml** - Runs automatically on:
+- Every push to `main` branch (builds PDF)
+- Pull requests (validates builds)
+- Tag pushes starting with `v*` (creates release with PDF)
+
+### Manual Workflows (Cost-Controlled)
+
+These workflows only run when manually triggered from the GitHub Actions tab:
+
+**lineedit.yml** - AI Line Editing
+- Runs line-by-line editing on all chapters
+- Creates a new branch with edits
+- Opens a pull request for review
+- Configurable: Choose backend (Anthropic/OpenAI/Ollama) and model
+- Requires: `ANTHROPIC_API_KEY` or `OPENAI_API_KEY` secret
+
+**copyedit.yml** - AI Copy Editing
+- Generates high-level editorial reviews
+- Uses your outlines for style consistency
+- Uploads reviews as artifacts
+- Configurable: Choose backend and model
+- Requires: `ANTHROPIC_API_KEY` or `OPENAI_API_KEY` secret
+
+**audiobook.yml** - Audiobook Generation
+- Converts all chapters to MP3 using ElevenLabs
+- Uploads MP3 files as artifacts
+- Configurable: Choose voice ID
+- Requires: `ELEVENLABS_API_KEY` secret
+
+### Setup Instructions
+
+1. Push your initialized project to GitHub
+2. Go to Settings → Secrets and variables → Actions
+3. Add the following secrets:
+   - `ANTHROPIC_API_KEY` (for Claude-based editing)
+   - `OPENAI_API_KEY` (for GPT-based editing)
+   - `ELEVENLABS_API_KEY` (for audiobook generation)
+4. Manually trigger AI workflows from the Actions tab
+
+**Cost Control**: AI workflows use `workflow_dispatch` (manual trigger only) to prevent unexpected API costs.
+
 ## Environment Variables
 
 | Variable | Default | Description |

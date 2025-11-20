@@ -78,21 +78,22 @@ txt:  $(TXT_TARGETS)
 mp3:  $(MP3_TARGETS)
 
 # Helper targets
-.PHONY: help check-tools list clean distclean clean.mp3 lineedit copyedit init
+.PHONY: help check-tools list clean distclean clean.mp3 lineedit copyedit init update-workflows
 
 help:
 	@echo "Available targets:"
-	@echo "  init     - Initialize a new book project"
-	@echo "  pdf      - Build PDF (default)"
-	@echo "  tex      - Generate LaTeX"
-	@echo "  docx     - Build DOCX"
-	@echo "  epub     - Build EPUB"
-	@echo "  txt      - Generate plain text files for TTS"
-	@echo "  mp3      - Generate MP3 audiobook"
-	@echo "  lineedit - Run LLM line editor and save to git branch"
-	@echo "  copyedit - Run LLM copy editor with style guide and save to git branch"
-	@echo "  list     - Show chapter order"
-	@echo "  clean    - Remove build artifacts"
+	@echo "  init             - Initialize a new book project"
+	@echo "  pdf              - Build PDF (default)"
+	@echo "  tex              - Generate LaTeX"
+	@echo "  docx             - Build DOCX"
+	@echo "  epub             - Build EPUB"
+	@echo "  txt              - Generate plain text files for TTS"
+	@echo "  mp3              - Generate MP3 audiobook"
+	@echo "  lineedit         - Run LLM line editor and save to git branch"
+	@echo "  copyedit         - Run LLM copy editor with style guide and save to git branch"
+	@echo "  update-workflows - Update GitHub Actions workflows from templates"
+	@echo "  list             - Show chapter order"
+	@echo "  clean            - Remove build artifacts"
 	@echo ""
 	@echo "Variables:"
 	@echo "  SRC_DIR=$(SRC_DIR)"
@@ -272,12 +273,15 @@ init: .git chapters outlines cover .gitignore Makefile .github/workflows/ci.yml
 	@echo "  .github/         - GitHub Actions workflow for CI/CD"
 	@echo ""
 	@echo "Files created:"
-	@echo "  chapters/01-chapter-one.md  - Sample first chapter"
-	@echo "  outlines/outline.md         - Book outline and style guide"
-	@echo "  cover/cover.png             - Default cover (replace with your own)"
-	@echo "  .gitignore                  - Ignore build artifacts"
-	@echo "  Makefile                    - Local build configuration"
-	@echo "  .github/workflows/ci.yml    - Auto-build and release workflow"
+	@echo "  chapters/01-chapter-one.md      - Sample first chapter"
+	@echo "  outlines/outline.md             - Book outline and style guide"
+	@echo "  cover/cover.png                 - Default cover (replace with your own)"
+	@echo "  .gitignore                      - Ignore build artifacts"
+	@echo "  Makefile                        - Local build configuration"
+	@echo "  .github/workflows/ci.yml        - Auto-build and release workflow"
+	@echo "  .github/workflows/lineedit.yml  - Manual AI line editing workflow"
+	@echo "  .github/workflows/copyedit.yml  - Manual AI copy editing workflow"
+	@echo "  .github/workflows/audiobook.yml - Manual audiobook generation workflow"
 	@echo ""
 	@echo "Next steps:"
 	@echo "  1. Edit chapters/01-chapter-one.md or add new chapters"
@@ -288,7 +292,12 @@ init: .git chapters outlines cover .gitignore Makefile .github/workflows/ci.yml
 	@echo "GitHub integration:"
 	@echo "  - Push to GitHub to trigger automatic PDF builds"
 	@echo "  - Create a tag (e.g., v1.0) to create a release with PDF"
-	@echo "  - Update the bones repo URL in .github/workflows/ci.yml"
+	@echo "  - Update the bones repo URL in .github/workflows/*.yml"
+	@echo "  - Add API keys as GitHub secrets for AI workflows:"
+	@echo "    • ANTHROPIC_API_KEY for Claude-based editing"
+	@echo "    • OPENAI_API_KEY for GPT-based editing"
+	@echo "    • ELEVENLABS_API_KEY for audiobook generation"
+	@echo "  - Manually trigger AI workflows from Actions tab (cost-controlled)"
 	@echo ""
 	@# Initial commit
 	@echo "• Creating initial commit"
@@ -452,62 +461,36 @@ Makefile: | .git
 		'# PANDOC_COMMON_FLAGS += -V author="Your Name"' \
 		> Makefile
 
-# GitHub Actions workflow
+# GitHub Actions workflows
 .github/workflows/ci.yml: | .git
-	@echo "• Creating GitHub Actions workflow"
+	@echo "• Creating GitHub Actions workflows"
 	@mkdir -p .github/workflows
-	@printf '%s\n' \
-		'name: Build and Release Book' \
-		'' \
-		'on:' \
-		'  push:' \
-		'    branches: [ main ]' \
-		'    tags:' \
-		'      - "v*"' \
-		'  pull_request:' \
-		'    branches: [ main ]' \
-		'  workflow_dispatch:' \
-		'' \
-		'jobs:' \
-		'  build:' \
-		'    runs-on: ubuntu-latest' \
-		'    steps:' \
-		'      - name: Checkout code' \
-		'        uses: actions/checkout@v4' \
-		'' \
-		'      - name: Install dependencies' \
-		'        run: |' \
-		'          sudo apt-get update' \
-		'          sudo apt-get install -y pandoc' \
-		'          # Install Tectonic for PDF generation' \
-		'          wget https://github.com/tectonic-typesetting/tectonic/releases/download/tectonic%400.15.0/tectonic-0.15.0-x86_64-unknown-linux-gnu.tar.gz' \
-		'          tar -xzf tectonic-0.15.0-x86_64-unknown-linux-gnu.tar.gz' \
-		'          sudo mv tectonic /usr/local/bin/' \
-		'          sudo chmod +x /usr/local/bin/tectonic' \
-		'' \
-		'      - name: Install Bones' \
-		'        run: |' \
-		'          git clone https://github.com/yourusername/bones.git /tmp/bones' \
-		'          cd /tmp/bones' \
-		'          sudo make install' \
-		'' \
-		'      - name: Build PDF' \
-		'        run: bones pdf' \
-		'' \
-		'      - name: Upload PDF artifact' \
-		'        uses: actions/upload-artifact@v4' \
-		'        with:' \
-		'          name: book-pdf' \
-		'          path: book.pdf' \
-		'' \
-		'      - name: Create Release' \
-		'        if: startsWith(github.ref, '\''refs/tags/'\'')' \
-		'        uses: softprops/action-gh-release@v1' \
-		'        with:' \
-		'          files: book.pdf' \
-		'        env:' \
-		'          GITHUB_TOKEN: $${{ secrets.GITHUB_TOKEN }}' \
-		> .github/workflows/ci.yml
+	@cp $(BONES_HOME)templates/ci.yml .github/workflows/ci.yml
+	@cp $(BONES_HOME)templates/lineedit.yml .github/workflows/lineedit.yml
+	@cp $(BONES_HOME)templates/copyedit.yml .github/workflows/copyedit.yml
+	@cp $(BONES_HOME)templates/audiobook.yml .github/workflows/audiobook.yml
+
+# Update existing workflows from templates
+update-workflows:
+	@if [ ! -d .github/workflows ]; then \
+		echo "Error: .github/workflows/ directory not found."; \
+		echo "Run 'bones init' first to initialize the project."; \
+		exit 1; \
+	fi
+	@echo "• Updating GitHub Actions workflows from templates"
+	@cp $(BONES_HOME)templates/ci.yml .github/workflows/ci.yml
+	@cp $(BONES_HOME)templates/lineedit.yml .github/workflows/lineedit.yml
+	@cp $(BONES_HOME)templates/copyedit.yml .github/workflows/copyedit.yml
+	@cp $(BONES_HOME)templates/audiobook.yml .github/workflows/audiobook.yml
+	@echo "✓ Workflows updated successfully"
+	@echo ""
+	@echo "Files updated:"
+	@echo "  .github/workflows/ci.yml"
+	@echo "  .github/workflows/lineedit.yml"
+	@echo "  .github/workflows/copyedit.yml"
+	@echo "  .github/workflows/audiobook.yml"
+	@echo ""
+	@echo "Review changes with: git diff .github/workflows/"
 
 # ===================== Cleaning =====================
 clean: clean.mp3

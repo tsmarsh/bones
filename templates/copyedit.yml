@@ -1,0 +1,45 @@
+name: AI Copy Editing
+
+on:
+  workflow_dispatch:
+    inputs:
+      backend:
+        description: 'LLM Backend'
+        required: false
+        default: 'anthropic'
+        type: choice
+        options:
+          - anthropic
+          - openai
+          - ollama
+      model:
+        description: 'Model name (leave empty for default)'
+        required: false
+        type: string
+
+jobs:
+  copyedit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Bones
+        run: |
+          git clone https://github.com/tsmarsh/bones.git /tmp/bones
+          cd /tmp/bones
+          sudo make install
+
+      - name: Run copy editing
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          LLM_BACKEND: ${{ github.event.inputs.backend }}
+          LLM_MODEL: ${{ github.event.inputs.model }}
+        run: bones copyedit
+
+      - name: Upload review artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: copy-edit-reviews
+          path: build/reviews/

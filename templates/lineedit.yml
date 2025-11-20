@@ -1,0 +1,58 @@
+name: AI Line Editing
+
+on:
+  workflow_dispatch:
+    inputs:
+      backend:
+        description: 'LLM Backend'
+        required: false
+        default: 'anthropic'
+        type: choice
+        options:
+          - anthropic
+          - openai
+          - ollama
+      model:
+        description: 'Model name (leave empty for default)'
+        required: false
+        type: string
+
+jobs:
+  lineedit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Bones
+        run: |
+          git clone https://github.com/tsmarsh/bones.git /tmp/bones
+          cd /tmp/bones
+          sudo make install
+
+      - name: Configure git
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+
+      - name: Run line editing
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          LLM_BACKEND: ${{ github.event.inputs.backend }}
+          LLM_MODEL: ${{ github.event.inputs.model }}
+        run: bones lineedit
+
+      - name: Push edits branch
+        run: |
+          BRANCH=$(git branch --show-current)
+          git push origin "$BRANCH"
+
+      - name: Create Pull Request
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          BRANCH=$(git branch --show-current)
+          gh pr create --title "AI Line Edits - $BRANCH" --body "Automated line editing using ${{ github.event.inputs.backend }}" --base main --head "$BRANCH" || echo "PR may already exist"

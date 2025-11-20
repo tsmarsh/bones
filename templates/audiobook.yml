@@ -1,0 +1,40 @@
+name: Generate Audiobook
+
+on:
+  workflow_dispatch:
+    inputs:
+      voice_id:
+        description: 'ElevenLabs Voice ID'
+        required: false
+        default: 'Xb7hH8MSUJpSbSDYk0k2'
+        type: string
+
+jobs:
+  audiobook:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y pandoc
+
+      - name: Install Bones
+        run: |
+          git clone https://github.com/tsmarsh/bones.git /tmp/bones
+          cd /tmp/bones
+          sudo make install
+
+      - name: Generate audiobook MP3s
+        env:
+          ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
+          ELEVENLABS_VOICE: ${{ github.event.inputs.voice_id }}
+        run: bones mp3
+
+      - name: Upload MP3 artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: audiobook-mp3
+          path: build/mp3/

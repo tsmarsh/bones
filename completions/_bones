@@ -1,0 +1,26 @@
+#compdef bones
+
+_bones() {
+  local -a commands
+  commands=(
+    'init:Initialize a new book project'
+    'pdf:Build PDF (default)'
+    'tex:Generate LaTeX'
+    'docx:Build DOCX'
+    'epub:Build EPUB'
+    'txt:Generate plain text files for TTS'
+    'mp3:Generate MP3 audiobook'
+    'lineedit:Run LLM line editor and save to git branch'
+    'copyedit:Run LLM copy editor with style guide'
+    'update-workflows:Update GitHub Actions workflows from templates'
+    'list:Show chapter order'
+    'clean:Remove build artifacts'
+    'distclean:Remove all build artifacts'
+    'help:Show help message'
+    'check-tools:Check for required tools'
+  )
+
+  _describe 'command' commands
+}
+
+_bones "$@"

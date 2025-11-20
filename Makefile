@@ -39,13 +39,22 @@ install:
 	@# Create installation directories
 	@mkdir -p $(INSTALL_DIR)
 	@mkdir -p $(INSTALL_DIR)/scripts
+	@mkdir -p $(INSTALL_DIR)/templates
 	@mkdir -p $(BIN_DIR)
+	@mkdir -p $(PREFIX)/share/zsh/site-functions
 	@# Copy rules and scripts
 	@echo "  • Installing rules.mk → $(INSTALL_DIR)/"
 	@cp -f rules.mk $(INSTALL_DIR)/rules.mk
 	@echo "  • Installing scripts → $(INSTALL_DIR)/scripts/"
 	@cp -f scripts/*.py $(INSTALL_DIR)/scripts/
 	@chmod +x $(INSTALL_DIR)/scripts/*.py
+	@echo "  • Installing templates → $(INSTALL_DIR)/templates/"
+	@cp -f templates/*.yml $(INSTALL_DIR)/templates/
+	@chmod 644 $(INSTALL_DIR)/templates/*.yml
+	@echo "  • Installing cover.png → $(INSTALL_DIR)/"
+	@cp -f cover.png $(INSTALL_DIR)/cover.png
+	@echo "  • Installing zsh completion → $(PREFIX)/share/zsh/site-functions/"
+	@cp -f completions/_bones $(PREFIX)/share/zsh/site-functions/_bones
 	@# Create bones wrapper script
 	@echo "  • Creating bones command → $(BONES_BIN)"
 	@printf '%s\n' \
@@ -70,6 +79,10 @@ install:
 	@echo "  bones pdf       - Build PDF"
 	@echo "  bones help      - Show all targets"
 	@echo ""
+	@echo "Shell completion:"
+	@echo "  Zsh completion installed to $(PREFIX)/share/zsh/site-functions/"
+	@echo "  Restart your shell or run: exec zsh"
+	@echo ""
 	@echo "Or include in your own Makefile:"
 	@echo "  include $(INSTALL_DIR)/rules.mk"
 
@@ -77,6 +90,7 @@ uninstall:
 	@echo "Removing bones from $(PREFIX)..."
 	@rm -rf $(INSTALL_DIR)
 	@rm -f $(BONES_BIN)
+	@rm -f $(PREFIX)/share/zsh/site-functions/_bones
 	@echo "✓ Uninstallation complete"
 
 test:
