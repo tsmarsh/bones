@@ -44,21 +44,13 @@ TOP_LEVEL_DIV ?= chapter
 MAIN_FONT := $(firstword $(wildcard $(FONTS_DIR)/main.ttf $(FONTS_DIR)/main.otf))
 SANS_FONT := $(firstword $(wildcard $(FONTS_DIR)/sans.ttf $(FONTS_DIR)/sans.otf))
 MONO_FONT := $(firstword $(wildcard $(FONTS_DIR)/mono.ttf $(FONTS_DIR)/mono.otf))
-CJK_FONT  := $(firstword $(wildcard $(FONTS_DIR)/cjk.ttf $(FONTS_DIR)/cjk.otf))
+CJK_FONT  := $(firstword $(wildcard $(FONTS_DIR)/cjk.ttf $(FONTS_DIR)/cjk.otf $(FONTS_DIR)/cjk.ttc))
 
-# Build font flags dynamically
-ifneq ($(MAIN_FONT),)
-  FONT_FLAGS += -V mainfont="$(abspath $(MAIN_FONT))"
-endif
-ifneq ($(SANS_FONT),)
-  FONT_FLAGS += -V sansfont="$(abspath $(SANS_FONT))"
-endif
-ifneq ($(MONO_FONT),)
-  FONT_FLAGS += -V monofont="$(abspath $(MONO_FONT))"
-endif
-ifneq ($(CJK_FONT),)
-  FONT_FLAGS += -V CJKmainfont="$(abspath $(CJK_FONT))"
-endif
+# If custom fonts exist, we'll use a LaTeX header to configure them
+# Otherwise, let pandoc/tectonic use default fonts
+HAS_CUSTOM_FONTS := $(or $(MAIN_FONT),$(SANS_FONT),$(MONO_FONT),$(CJK_FONT))
+FONT_HEADER := $(if $(HAS_CUSTOM_FONTS),$(OBJ_DIR)/fonts-header.tex,)
+FONT_FLAGS := $(if $(FONT_HEADER),--include-in-header=$(FONT_HEADER),)
 
 PANDOC_COMMON_FLAGS += \
   -V documentclass=$(DOC_CLASS) \
@@ -72,15 +64,14 @@ PANDOC_COMMON_FLAGS += \
   -V linkcolor=MidnightBlue \
   -V urlcolor=RoyalBlue \
   -V papersize=6in,9in \
-  -V secnumdepth=0 \
-  $(FONT_FLAGS)
+  -V secnumdepth=0
 
 COVER_HEADER := $(OBJ_DIR)/cover-header.tex
 
 # ===================== Defaults & safety =====================
 .DEFAULT_GOAL := pdf
 .DELETE_ON_ERROR:
-.SECONDARY: $(COMBINED_MD) $(TEX_OUTPUT) $(PDF_BUILD) $(COVER_JPG) $(COVER_HEADER)
+.SECONDARY: $(COMBINED_MD) $(TEX_OUTPUT) $(PDF_BUILD) $(COVER_JPG) $(COVER_HEADER) $(FONT_HEADER)
 .SECONDEXPANSION:                    # enables $$ expansion in prerequisites
 
 # ===================== Short, descriptive targets =====================
@@ -161,6 +152,28 @@ $(COVER_HEADER): $(COVER_JPG) | $(OBJ_DIR)
 		'}' \
 		> $@
 
+# Font header for LaTeX (only if custom fonts exist)
+# Use paths relative to build/obj/ where the .tex file lives (../../fonts/)
+$(OBJ_DIR)/fonts-header.tex: | $(OBJ_DIR)
+	@echo "• Generating font header → $@"
+	@printf '%s\n' '\ifPDFTeX' '\else' > $@
+ifneq ($(CJK_FONT),)
+	@printf '  \\usepackage{xeCJK}\n' >> $@
+endif
+ifneq ($(MAIN_FONT),)
+	@printf '  \\setmainfont{%s}[Path=../../%s,Extension=%s]\n' '$(basename $(notdir $(MAIN_FONT)))' '$(dir $(MAIN_FONT))' '$(suffix $(MAIN_FONT))' >> $@
+endif
+ifneq ($(SANS_FONT),)
+	@printf '  \\setsansfont{%s}[Path=../../%s,Extension=%s]\n' '$(basename $(notdir $(SANS_FONT)))' '$(dir $(SANS_FONT))' '$(suffix $(SANS_FONT))' >> $@
+endif
+ifneq ($(MONO_FONT),)
+	@printf '  \\setmonofont{%s}[Path=../../%s,Extension=%s]\n' '$(basename $(notdir $(MONO_FONT)))' '$(dir $(MONO_FONT))' '$(suffix $(MONO_FONT))' >> $@
+endif
+ifneq ($(CJK_FONT),)
+	@printf '  \\setCJKmainfont{%s}[Path=../../%s,Extension=%s]\n' '$(basename $(notdir $(CJK_FONT)))' '$(dir $(CJK_FONT))' '$(suffix $(CJK_FONT))' >> $@
+endif
+	@printf '%s\n' '\fi' >> $@
+
 # Manifest: ordered chapter list (version sort)
 $(MANIFEST): | $(OBJ_DIR)
 	@echo "• Scanning $(SRC_DIR) → $@"
@@ -187,9 +200,9 @@ $(COMBINED_MD): $(MANIFEST) $(DEPFILE) | $(OBJ_DIR)
 	@mv $@.tmp $@
 
 # LaTeX from combined markdown
-$(TEX_OUTPUT): $(COMBINED_MD) $(COVER_HEADER) | $(OBJ_DIR)
+$(TEX_OUTPUT): $(COMBINED_MD) $(COVER_HEADER) $(FONT_HEADER) | $(OBJ_DIR)
 	@echo "• Generating LaTeX → $@"
-	$(PANDOC) -s -t latex $(PANDOC_COMMON_FLAGS) --include-in-header=$(COVER_HEADER) -o $@ $(COMBINED_MD)
+	$(PANDOC) -s -t latex $(PANDOC_COMMON_FLAGS) $(FONT_FLAGS) --include-in-header=$(COVER_HEADER) -o $@ $(COMBINED_MD)
 
 # PDF from TeX (tectonic preferred; otherwise run engine twice)
 $(PDF_OUTPUT): $(TEX_OUTPUT)
