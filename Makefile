@@ -48,6 +48,8 @@ install:
 	@echo "  • Installing scripts → $(INSTALL_DIR)/scripts/"
 	@cp -f scripts/*.py $(INSTALL_DIR)/scripts/
 	@chmod +x $(INSTALL_DIR)/scripts/*.py
+	@cp -f scripts/*.mk $(INSTALL_DIR)/scripts/
+	@chmod 644 $(INSTALL_DIR)/scripts/*.mk
 	@echo "  • Installing templates → $(INSTALL_DIR)/templates/"
 	@cp -f templates/*.yml $(INSTALL_DIR)/templates/
 	@chmod 644 $(INSTALL_DIR)/templates/*.yml
