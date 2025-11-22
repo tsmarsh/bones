@@ -66,7 +66,7 @@ install:
 		'# Bones - Makefile-based Book Pipeline' \
 		'# Auto-generated wrapper script' \
 		'' \
-		'BONES_RULES="$(INSTALL_DIR)/rules.mk"' \
+		"BONES_RULES=\"$(INSTALL_DIR)/rules.mk\"" \
 		'' \
 		'if [ ! -f "$$BONES_RULES" ]; then' \
 		'    echo "Error: bones rules not found at $$BONES_RULES" >&2' \
