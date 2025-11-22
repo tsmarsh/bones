@@ -202,7 +202,27 @@ bones lineedit --backend openai --model gpt-4
 **Optional** (for audiobooks):
 - ElevenLabs API key (for TTS)
 
-### Install System-Wide
+### Install via Homebrew (Recommended)
+
+The easiest way to install Bones on macOS or Linux:
+
+```bash
+# Add the tap
+brew tap tsmarsh/bones
+
+# Install bones (includes all dependencies)
+brew install bones
+```
+
+Homebrew automatically installs:
+- `bones` command to `/usr/local/bin/bones` (Intel) or `/opt/homebrew/bin/bones` (Apple Silicon)
+- All required dependencies: `python3`, `pandoc`
+- Recommended dependencies: `tectonic` (for PDF generation)
+- Shell completions for Zsh
+
+**No sudo required!** Homebrew manages everything for you.
+
+### Install from Source
 
 ```bash
 # Clone the repository
@@ -225,6 +245,12 @@ This installs:
 
 ### Uninstall
 
+**Homebrew:**
+```bash
+brew uninstall bones
+```
+
+**From source:**
 ```bash
 sudo make uninstall
 ```

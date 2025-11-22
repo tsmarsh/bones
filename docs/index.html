@@ -174,21 +174,29 @@
     <section id="install" class="installation">
         <div class="container">
             <h2 class="section-title">Get Started in Minutes</h2>
+
+            <div style="text-align: center; margin-bottom: 3rem;">
+                <h3 style="font-size: 1.5rem; margin-bottom: 1rem;">Install via Homebrew (Recommended)</h3>
+                <pre style="display: inline-block; text-align: left; margin-bottom: 1rem;"><code>brew tap tsmarsh/bones
+brew install bones</code></pre>
+                <p style="font-size: 1rem; color: var(--accent);">No sudo required • All dependencies included • Works on macOS and Linux</p>
+            </div>
+
             <div class="install-steps">
                 <div class="step">
                     <div class="step-number">1</div>
-                    <h3>Clone</h3>
-                    <p>Clone the repository and navigate to it</p>
+                    <h3>Install</h3>
+                    <p>Run <code>brew install bones</code> (Homebrew) or <code>sudo make install</code> (from source)</p>
                 </div>
                 <div class="step">
                     <div class="step-number">2</div>
-                    <h3>Install</h3>
-                    <p>Run <code>sudo make install</code> to install Bones</p>
+                    <h3>Initialize</h3>
+                    <p>Run <code>bones init</code> in your project directory</p>
                 </div>
                 <div class="step">
                     <div class="step-number">3</div>
-                    <h3>Initialize</h3>
-                    <p>Run <code>bones init</code> in your project directory</p>
+                    <h3>Write</h3>
+                    <p>Edit your chapters in the <code>chapters/</code> directory</p>
                 </div>
                 <div class="step">
                     <div class="step-number">4</div>
@@ -196,11 +204,17 @@
                     <p>Run <code>bones pdf</code> to create your book</p>
                 </div>
             </div>
+
             <div style="text-align: center; margin-top: 3rem;">
+                <h4 style="margin-bottom: 1rem;">Or install from source:</h4>
                 <pre style="display: inline-block; text-align: left;"><code>git clone https://github.com/tsmarsh/bones.git
 cd bones
-sudo make install
-cd ~/my-book
+sudo make install</code></pre>
+            </div>
+
+            <div style="text-align: center; margin-top: 2rem;">
+                <h4 style="margin-bottom: 1rem;">Quick start:</h4>
+                <pre style="display: inline-block; text-align: left;"><code>mkdir ~/my-book && cd ~/my-book
 bones init
 bones pdf</code></pre>
             </div>
