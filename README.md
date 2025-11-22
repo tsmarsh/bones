@@ -209,8 +209,11 @@ bones lineedit --backend openai --model gpt-4
 git clone https://github.com/yourusername/bones.git
 cd bones
 
-# Check that required tools are available
+# Run comprehensive test suite (validates installation, init, and PDF build)
 make test
+
+# Or just check for required tools
+make check-tools
 
 # Install (requires sudo)
 sudo make install
@@ -323,29 +326,29 @@ publish: pdf epub
 
 #### Line Editing
 
+Performs high-level editing (pacing, consistency, style, character voices):
+
+```bash
+bones lineedit
+
+# Reviews are saved to build/reviews/
+cat build/reviews/01-beginning-review.md
+```
+
+#### Copy Editing
+
 Performs sentence-level editing (grammar, flow, clarity):
 
 ```bash
 # Edit all chapters, create git branch
-bones lineedit
+bones copyedit
 
 # Review changes
 git diff main
 
 # Accept or reject
 git merge main  # Accept all
-git branch -D edits/TIMESTAMP  # Reject all
-```
-
-#### Copy Editing
-
-Performs high-level editing (pacing, consistency, style):
-
-```bash
-bones copyedit
-
-# Reviews are saved to build/reviews/
-cat build/reviews/01-beginning-review.md
+git branch -D copyedit/TIMESTAMP  # Reject all
 ```
 
 #### Standalone Usage
@@ -353,21 +356,24 @@ cat build/reviews/01-beginning-review.md
 You can also use the editors directly on individual files:
 
 ```bash
-# Safe default: creates chapter.edited.md
+# Line editing - generates review
 python3 /usr/local/share/bones/scripts/line_editor.py chapter.md
 
+# Copy editing - safe default: creates chapter.edited.md
+python3 /usr/local/share/bones/scripts/copy_editor.py chapter.md
+
 # Overwrite original file
-python3 /usr/local/share/bones/scripts/line_editor.py chapter.md --overwrite
+python3 /usr/local/share/bones/scripts/copy_editor.py chapter.md --overwrite
 
 # Specify output
-python3 /usr/local/share/bones/scripts/line_editor.py chapter.md -o edited.md
+python3 /usr/local/share/bones/scripts/copy_editor.py chapter.md -o edited.md
 
 # Custom instruction
-python3 /usr/local/share/bones/scripts/line_editor.py chapter.md \
+python3 /usr/local/share/bones/scripts/copy_editor.py chapter.md \
     --instruction "Focus on dialogue flow"
 
 # Use different backend/model
-python3 /usr/local/share/bones/scripts/line_editor.py chapter.md \
+python3 /usr/local/share/bones/scripts/copy_editor.py chapter.md \
     --backend openai --model gpt-4
 ```
 
@@ -577,9 +583,55 @@ bones lineedit --backend ollama --model llama2
 
 MIT License - See LICENSE file for details
 
+## Development
+
+### Testing
+
+Bones includes a comprehensive test suite that validates installation, project initialization, and PDF generation:
+
+```bash
+# Run full test suite
+make test
+
+# Just check for required tools
+make check-tools
+```
+
+The test suite:
+1. ✓ Installs bones to a temporary location
+2. ✓ Initializes a new project
+3. ✓ Builds a PDF (if pandoc/tectonic available)
+4. ✓ Validates help and clean targets
+5. ✓ Cleans up all test artifacts
+
+### Project Structure
+
+```
+bones/
+├── Makefile              # Installation and testing
+├── rules.mk              # Core build logic (259 lines)
+├── scripts/
+│   ├── init.mk           # Project initialization (278 lines)
+│   ├── ai-editing.mk     # LLM editing tools (51 lines)
+│   ├── llm_client.py     # Multi-backend LLM client
+│   ├── line_editor.py    # AI line editor
+│   ├── copy_editor.py    # AI copy editor
+│   └── llm_elevenlabs_tts.py
+├── templates/            # GitHub Actions workflows
+└── completions/          # Shell completions
+
+```
+
+The codebase is modularized for maintainability - the main `rules.mk` file focuses on core build logic, while initialization scaffolding and AI tools are separated into their own modules.
+
 ## Contributing
 
-Contributions welcome! Please open an issue or PR.
+Contributions welcome! Please:
+1. Run `make test` before submitting PRs
+2. Update tests if adding new features
+3. Keep the modular structure (don't add everything to rules.mk)
+
+Open an issue or PR on GitHub.
 
 ## Credits
 

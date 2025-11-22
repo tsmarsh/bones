@@ -15,7 +15,7 @@
 # Or include rules.mk directly in your own Makefile:
 #   include /usr/local/share/bones/rules.mk
 
-.PHONY: help install uninstall test
+.PHONY: help install uninstall test check-tools
 
 # Installation paths
 PREFIX       ?= /usr/local
@@ -29,7 +29,8 @@ help:
 	@echo "Targets:"
 	@echo "  install     - Install bones system-wide (requires sudo)"
 	@echo "  uninstall   - Remove bones from system (requires sudo)"
-	@echo "  test        - Test that required tools are available"
+	@echo "  test        - Run comprehensive test suite"
+	@echo "  check-tools - Check that required tools are available"
 	@echo ""
 	@echo "After installation, use 'bones <target>' in any directory."
 	@echo "Example: bones pdf"
@@ -96,7 +97,7 @@ uninstall:
 	@rm -f $(PREFIX)/share/zsh/site-functions/_bones
 	@echo "✓ Uninstallation complete"
 
-test:
+check-tools:
 	@echo "Checking for required tools..."
 	@command -v make >/dev/null 2>&1 || { echo "  ✗ make not found"; exit 1; }
 	@echo "  ✓ make"
@@ -108,3 +109,95 @@ test:
 	@command -v tectonic >/dev/null 2>&1 && echo "  ✓ tectonic" || true
 	@echo ""
 	@echo "All required tools found!"
+
+test:
+	@echo "======================================================================"
+	@echo "  Bones Test Suite"
+	@echo "======================================================================"
+	@echo ""
+	@# Check required tools first
+	@$(MAKE) -s check-tools
+	@echo ""
+	@# Test 1: Install to temporary location
+	@echo "Test 1: Installing bones to temporary location..."
+	@rm -rf /tmp/test-bones-install
+	@$(MAKE) -s install PREFIX=/tmp/test-bones-install
+	@if [ ! -f /tmp/test-bones-install/bin/bones ]; then \
+		echo "  ✗ bones binary not created"; \
+		exit 1; \
+	fi
+	@if [ ! -f /tmp/test-bones-install/share/bones/rules.mk ]; then \
+		echo "  ✗ rules.mk not installed"; \
+		exit 1; \
+	fi
+	@if [ ! -f /tmp/test-bones-install/share/bones/scripts/init.mk ]; then \
+		echo "  ✗ scripts/init.mk not installed"; \
+		exit 1; \
+	fi
+	@if [ ! -f /tmp/test-bones-install/share/bones/scripts/ai-editing.mk ]; then \
+		echo "  ✗ scripts/ai-editing.mk not installed"; \
+		exit 1; \
+	fi
+	@echo "  ✓ Installation files created"
+	@echo ""
+	@# Test 2: Initialize a new project
+	@echo "Test 2: Initializing new project..."
+	@rm -rf /tmp/test-bones-project
+	@mkdir -p /tmp/test-bones-project
+	@cd /tmp/test-bones-project && \
+		make -f /tmp/test-bones-install/share/bones/rules.mk init >/dev/null 2>&1
+	@if [ ! -d /tmp/test-bones-project/chapters ]; then \
+		echo "  ✗ chapters/ not created"; \
+		exit 1; \
+	fi
+	@if [ ! -f /tmp/test-bones-project/chapters/01-chapter-one.md ]; then \
+		echo "  ✗ sample chapter not created"; \
+		exit 1; \
+	fi
+	@if [ ! -f /tmp/test-bones-project/.gitignore ]; then \
+		echo "  ✗ .gitignore not created"; \
+		exit 1; \
+	fi
+	@if [ ! -d /tmp/test-bones-project/.github/workflows ]; then \
+		echo "  ✗ GitHub workflows not created"; \
+		exit 1; \
+	fi
+	@echo "  ✓ Project initialized successfully"
+	@echo ""
+	@# Test 3: Build PDF (if pandoc and tectonic available)
+	@if command -v pandoc >/dev/null 2>&1 && command -v tectonic >/dev/null 2>&1; then \
+		echo "Test 3: Building PDF..."; \
+		cd /tmp/test-bones-project && \
+			make -f /tmp/test-bones-install/share/bones/rules.mk pdf >/dev/null 2>&1; \
+		if [ ! -f /tmp/test-bones-project/book.pdf ]; then \
+			echo "  ✗ PDF not generated"; \
+			exit 1; \
+		fi; \
+		echo "  ✓ PDF built successfully"; \
+	else \
+		echo "Test 3: Skipping PDF build (pandoc or tectonic not available)"; \
+	fi
+	@echo ""
+	@# Test 4: Test help target
+	@echo "Test 4: Testing help target..."
+	@cd /tmp/test-bones-project && \
+		make -f /tmp/test-bones-install/share/bones/rules.mk help >/dev/null 2>&1
+	@echo "  ✓ Help target works"
+	@echo ""
+	@# Test 5: Test clean targets
+	@echo "Test 5: Testing clean targets..."
+	@cd /tmp/test-bones-project && \
+		make -f /tmp/test-bones-install/share/bones/rules.mk clean >/dev/null 2>&1
+	@if [ -d /tmp/test-bones-project/build/obj ]; then \
+		echo "  ✗ build/obj not removed by clean"; \
+		exit 1; \
+	fi
+	@echo "  ✓ Clean targets work"
+	@echo ""
+	@# Cleanup
+	@echo "Cleaning up test artifacts..."
+	@rm -rf /tmp/test-bones-install /tmp/test-bones-project
+	@echo ""
+	@echo "======================================================================"
+	@echo "  ✓ All tests passed!"
+	@echo "======================================================================"

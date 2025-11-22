@@ -41,16 +41,16 @@ make clean.mp3         # Remove MP3 files
 ## Features
 
 ### **Line Editor**
-- **Professional Fiction Editing** - Improves clarity, grammar, flow, and word choice
-- **Voice Preservation** - Maintains author's unique style
-- **Multi-Backend Support** - Works with Ollama, OpenAI, or Anthropic
-- **In-Place Editing** - Directly updates chapter files
-
-### **Copy Editor**
 - **Context-Aware** - Loads style guide and world-building from outlines/
 - **Consistency Checking** - Ensures character voices and terminology match
 - **Review Generation** - Creates detailed reviews with specific suggestions
 - **Multi-Backend Support** - Works with Ollama, OpenAI, or Anthropic
+
+### **Copy Editor**
+- **Professional Fiction Editing** - Improves clarity, grammar, flow, and word choice
+- **Voice Preservation** - Maintains author's unique style
+- **Multi-Backend Support** - Works with Ollama, OpenAI, or Anthropic
+- **In-Place Editing** - Directly updates chapter files
 
 ### **LLM Client**
 - **Multi-Backend** - Unified interface for ollama, openai, anthropic

@@ -2,13 +2,13 @@
 """
 Copy Editor (LLM-assisted)
 
-Loads context from outlines/ directory and sends full chapter to LLM for copy editing.
-Outputs a review with specific suggestions for improvement.
+Sends full chapter to LLM for copy editing and returns only the edited markdown.
 
 Examples:
-    $ python3 copy_editor.py chapter.md
-    $ python3 copy_editor.py chapter.md --backend anthropic
-    $ python3 copy_editor.py chapter.md --outlines-dir outlines -o review.md
+    $ python3 copy_editor.py chapter.md                    # saves to chapter.edited.md
+    $ python3 copy_editor.py chapter.md --overwrite        # overwrites chapter.md
+    $ python3 copy_editor.py chapter.md -o output.md       # saves to output.md
+    $ python3 copy_editor.py chapter.md --instruction "Focus on dialogue"
 """
 
 import argparse
@@ -16,96 +16,59 @@ import os
 import sys
 from pathlib import Path
 
-from llm_client import LLMClient
-
-
-# -------------------- Context loading --------------------
-
-def load_context(outlines_dir: str) -> str:
-    """
-    Load all markdown files from outlines directory as context.
-
-    Args:
-        outlines_dir: Path to directory containing context files
-
-    Returns:
-        Combined context from all .md files
-
-    Examples:
-        >>> import tempfile
-        >>> import os
-        >>> tmpdir = tempfile.mkdtemp()
-        >>> _ = Path(tmpdir, "test.md").write_text("# Test\\nContent")
-        >>> context = load_context(tmpdir)
-        >>> "# Test" in context
-        True
-        >>> "Content" in context
-        True
-        >>> import shutil
-        >>> shutil.rmtree(tmpdir)
-    """
-    context_parts = []
-    outlines_path = Path(outlines_dir)
-
-    if not outlines_path.exists():
-        return ""
-
-    # Load all .md files in outlines directory
-    for md_file in sorted(outlines_path.glob("*.md")):
-        try:
-            content = md_file.read_text(encoding='utf-8')
-            context_parts.append(f"# Context from {md_file.name}\n\n{content}")
-        except Exception as e:
-            print(f"Warning: Could not read {md_file}: {e}", file=sys.stderr)
-
-    return "\n\n---\n\n".join(context_parts)
+from llm_client import LLMClient, strip_markdown_fences
 
 
 # -------------------- Prompts --------------------
 
 SYSTEM_PROMPT = """You are a professional copy editor for fiction.
 
-Your task is to review the provided chapter for:
-- Consistency with the style guide, character voices, and world-building
-- Grammar, clarity, and flow
-- Proper use of established terminology and language patterns
-- Character voice consistency
+Your task is to edit the provided chapter for:
+- Clarity and concision
+- Grammar and punctuation
+- Sentence flow and rhythm
+- Word choice and precision
 
-Output a prose review with specific suggestions for improvement. For each issue:
-1. Quote the relevant text
-2. Explain the issue
-3. Suggest a specific improvement
+Make minimal, targeted edits that improve the prose while preserving the author's voice and style.
 
-Be concise but thorough. Focus on the most important issues."""
+CRITICAL: You must output ONLY the edited markdown file. Do not include:
+- Explanations or commentary
+- Notes about changes made
+- Markdown code fences (no ```markdown)
+- Any text before or after the edited content
+
+Just output the complete edited chapter as clean markdown."""
 
 
-def build_user_prompt(context: str, chapter_text: str) -> str:
+def build_user_prompt(chapter_text: str, instruction: str = "") -> str:
     """
-    Build the user prompt with context and chapter.
+    Build the user prompt for copy editing.
 
     Args:
-        context: Style guide and world-building context
-        chapter_text: The chapter content to review
+        chapter_text: The chapter content to edit
+        instruction: Optional additional editing guidance
 
     Returns:
         Formatted user prompt
 
     Examples:
-        >>> prompt = build_user_prompt("Style: X", "Chapter text")
-        >>> "Style: X" in prompt
+        >>> prompt = build_user_prompt("# Chapter 1\\nHello world")
+        >>> "Copy edit the following chapter" in prompt
         True
-        >>> "Chapter text" in prompt
+        >>> "# Chapter 1" in prompt
         True
-        >>> "review the following chapter" in prompt
+        >>> prompt = build_user_prompt("text", "Focus on X")
+        >>> "Focus on X" in prompt
         True
     """
-    return f"""Here is the context for this work (style guide, characters, locations, language):
+    if instruction:
+        return f"""Additional guidance: {instruction}
 
-{context}
+Now, copy edit the following chapter. Output ONLY the edited chapter as markdown, with no additional commentary:
 
----
-
-Now, review the following chapter according to the style guide and context above. Provide specific suggestions for improvements:
+{chapter_text}"""
+    else:
+        return f"""Copy edit the following chapter. Output ONLY the edited chapter as markdown, with no additional commentary:
 
 {chapter_text}"""
 
@@ -119,14 +82,20 @@ def main():
     Returns:
         0 on success, 1 on error
     """
-    ap = argparse.ArgumentParser(description="LLM-assisted copy editor with style guide context")
+    ap = argparse.ArgumentParser(description="LLM-assisted copy editor")
     ap.add_argument("input_file", help="Chapter file to edit")
-    ap.add_argument("-o", "--output", help="Output file (default: overwrite input)")
-    ap.add_argument("--outlines-dir", default="outlines", help="Directory with style guide and context")
+    ap.add_argument("-o", "--output", help="Output file (default: input_file.edited.md)")
+    ap.add_argument("--overwrite", action="store_true", help="Overwrite input file instead of creating .edited.md")
+    ap.add_argument("--instruction", default="", help="Additional editing guidance")
     ap.add_argument("--backend", choices=["ollama","openai","anthropic"], default=os.environ.get("LLM_BACKEND","anthropic"))
     ap.add_argument("--model", default=os.environ.get("LLM_MODEL","claude-3-7-sonnet-20250219"))
     ap.add_argument("--temperature", type=float, default=0.3)
     args = ap.parse_args()
+
+    # Validate argument combinations
+    if args.output and args.overwrite:
+        print("Error: Cannot use both -o/--output and --overwrite", file=sys.stderr)
+        return 1
 
     # Read input file
     input_path = Path(args.input_file)
@@ -136,30 +105,35 @@ def main():
 
     chapter_text = input_path.read_text(encoding='utf-8')
 
-    # Load context from outlines
-    print(f"• Loading context from {args.outlines_dir}/", file=sys.stderr)
-    context = load_context(args.outlines_dir)
-
-    if not context:
-        print(f"Warning: No context files found in {args.outlines_dir}/", file=sys.stderr)
-
     # Run LLM
     print(f"• Using {args.backend}/{args.model}", file=sys.stderr)
-    print(f"• Reviewing {input_path.name}...", file=sys.stderr)
+    print(f"• Copy editing {input_path.name}...", file=sys.stderr)
     client = LLMClient(args.backend, args.model, args.temperature)
-    review = client.generate(SYSTEM_PROMPT, build_user_prompt(context, chapter_text))
+    edited = client.generate(SYSTEM_PROMPT, build_user_prompt(chapter_text, args.instruction))
 
-    # Determine output file: if no -o specified, write to build/reviews/
+    # Strip any potential markdown code fences the LLM might add
+    edited = strip_markdown_fences(edited)
+
+    # Determine output path with safety checks
     if args.output:
+        # Explicit output file specified
         output_path = Path(args.output)
+    elif args.overwrite:
+        # User explicitly wants to overwrite
+        output_path = input_path
     else:
-        reviews_dir = Path("build/reviews")
-        reviews_dir.mkdir(parents=True, exist_ok=True)
-        output_path = reviews_dir / f"{input_path.stem}-review.md"
+        # Safe default: create .edited.md file
+        stem = input_path.stem
+        suffix = input_path.suffix
+        output_path = input_path.with_name(f"{stem}.edited{suffix}")
 
-    # Write review
-    output_path.write_text(review.strip(), encoding='utf-8')
-    print(f"✓ Review → {output_path}", file=sys.stderr)
+    # Write output
+    output_path.write_text(edited, encoding='utf-8')
+
+    if output_path == input_path:
+        print(f"✓ Edited (overwritten) → {output_path}", file=sys.stderr)
+    else:
+        print(f"✓ Edited → {output_path}", file=sys.stderr)
 
     return 0
 
