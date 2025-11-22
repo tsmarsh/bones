@@ -277,6 +277,62 @@
             font-weight: bold;
         }
 
+        /* Showcase */
+        .showcase {
+            padding: 5rem 0;
+            background: white;
+        }
+
+        .showcase-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+        }
+
+        .showcase-item {
+            background: var(--light);
+            padding: 2rem;
+            border-radius: 10px;
+            border-left: 4px solid var(--primary);
+            transition: transform 0.3s, box-shadow 0.3s;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .showcase-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+
+        .showcase-image {
+            width: 100%;
+            height: auto;
+            border-radius: 5px;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            border: 1px solid #ddd;
+        }
+
+        .showcase-item h3 {
+            color: var(--primary);
+            margin-bottom: 1rem;
+            font-size: 1.3rem;
+        }
+
+        .showcase-item p {
+            color: var(--secondary);
+            margin-bottom: 1rem;
+            line-height: 1.6;
+        }
+
+        .feature-highlight {
+            font-size: 0.9rem;
+            color: var(--accent);
+            font-weight: 600;
+            padding-top: 1rem;
+            border-top: 1px solid #ddd;
+        }
+
         /* Installation */
         .installation {
             padding: 5rem 0;
@@ -463,6 +519,50 @@
             </div>
             <div style="text-align: center; margin-top: 3rem;">
                 <p style="font-size: 1.2rem;">Works with Claude (Anthropic), GPT-4 (OpenAI), or local models (Ollama)</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="showcase">
+        <div class="container">
+            <h2 class="section-title">See It In Action</h2>
+            <p style="text-align: center; font-size: 1.2rem; margin-bottom: 3rem; color: var(--accent);">
+                Real examples from "Beast" by T.S. Marsh - built with Bones
+            </p>
+
+            <div class="showcase-grid">
+                <div class="showcase-item">
+                    <img src="images/showcase/cover-01.png" alt="Beast book cover" class="showcase-image">
+                    <h3>Professional Cover Design</h3>
+                    <p>Custom covers with your artwork integrate seamlessly with LaTeX-generated interiors</p>
+                    <div class="feature-highlight">Full-bleed images • Custom fonts • Professional typography</div>
+                </div>
+
+                <div class="showcase-item">
+                    <img src="images/showcase/toc-03.png" alt="Table of contents" class="showcase-image">
+                    <h3>Beautiful Table of Contents</h3>
+                    <p>Auto-generated, perfectly formatted chapter listings with page numbers</p>
+                    <div class="feature-highlight">Auto-pagination • Clean layout • Customizable styling</div>
+                </div>
+
+                <div class="showcase-item">
+                    <img src="images/showcase/chapter-05.png" alt="Chapter heading" class="showcase-image">
+                    <h3>Elegant Chapter Headings</h3>
+                    <p>Professional chapter openings with consistent spacing and typography</p>
+                    <div class="feature-highlight">Custom fonts • Perfect margins • Print-ready quality</div>
+                </div>
+
+                <div class="showcase-item">
+                    <img src="images/showcase/body-06.png" alt="Body text sample" class="showcase-image">
+                    <h3>Clean, Readable Body Text</h3>
+                    <p>Optimized line spacing, margins, and typography for comfortable reading</p>
+                    <div class="feature-highlight">Professional typesetting • Proper widows/orphans • Print quality</div>
+                </div>
+            </div>
+
+            <div style="text-align: center; margin-top: 3rem;">
+                <p style="font-size: 1.1rem; margin-bottom: 1rem;">From markdown to professional PDF in one command:</p>
+                <pre style="display: inline-block; text-align: left; padding: 1rem 2rem; font-size: 1.1rem;"><code>bones pdf</code></pre>
             </div>
         </div>
     </section>
