@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Git for Authors - Version control your manuscript like a pro">
+    <title>Git for Authors - Bones Publishing</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <script>
+        mermaid.initialize({ startOnLoad: true, theme: 'neutral' });
+    </script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #1a1a1a;
+            --secondary: #2a2a2a;
+            --accent: #404040;
+            --light: #f5f5f5;
+            --dark: #0a0a0a;
+            --code-bg: #1e1e1e;
+            --bone-white: #e8e8e8;
+            --success: #4ade80;
+            --warning: #fbbf24;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--primary);
+            background: #fff;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Header */
+        header {
+            background: var(--primary);
+            color: white;
+            padding: 1rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        header .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        header .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        header .logo {
+            height: 40px;
+            width: auto;
+        }
+
+        header h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        nav a {
+            color: white;
+            text-decoration: none;
+            margin-left: 2rem;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        nav a:hover {
+            color: var(--bone-white);
+        }
+
+        /* Hero */
+        .hero {
+            background: linear-gradient(135deg, var(--dark) 0%, var(--secondary) 100%);
+            color: white;
+            padding: 4rem 0;
+            text-align: center;
+        }
+
+        .hero h2 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .hero p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        /* Content sections */
+        section {
+            padding: 4rem 0;
+        }
+
+        section:nth-child(even) {
+            background: var(--light);
+        }
+
+        h2 {
+            font-size: 2rem;
+            margin-bottom: 2rem;
+            color: var(--primary);
+        }
+
+        h3 {
+            font-size: 1.5rem;
+            margin: 2rem 0 1rem;
+            color: var(--secondary);
+        }
+
+        p {
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+            line-height: 1.8;
+        }
+
+        /* Diagram container */
+        .diagram-container {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            margin: 2rem 0;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .diagram-title {
+            text-align: center;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--secondary);
+        }
+
+        /* Benefits list */
+        .benefits {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin: 2rem 0;
+        }
+
+        .benefit-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            border-left: 4px solid var(--primary);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .benefit-card h3 {
+            margin-top: 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .benefit-icon {
+            font-size: 1.5rem;
+        }
+
+        /* Code blocks */
+        pre {
+            background: var(--code-bg);
+            color: #d4d4d4;
+            padding: 1.5rem;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 1.5rem 0;
+            font-size: 0.95rem;
+        }
+
+        code {
+            font-family: 'Courier New', Courier, monospace;
+        }
+
+        /* Scenario boxes */
+        .scenario {
+            background: linear-gradient(135deg, #667eea22 0%, #764ba222 100%);
+            border-left: 4px solid #667eea;
+            padding: 2rem;
+            border-radius: 8px;
+            margin: 2rem 0;
+        }
+
+        .scenario h4 {
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+            color: #667eea;
+        }
+
+        /* Tips */
+        .tip {
+            background: #fef3c7;
+            border-left: 4px solid var(--warning);
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin: 2rem 0;
+        }
+
+        .tip-title {
+            font-weight: 600;
+            color: #92400e;
+            margin-bottom: 0.5rem;
+        }
+
+        /* Footer */
+        footer {
+            background: var(--primary);
+            color: white;
+            padding: 2rem 0;
+            text-align: center;
+        }
+
+        footer a {
+            color: var(--bone-white);
+            text-decoration: none;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+            color: white;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero h2 {
+                font-size: 1.8rem;
+            }
+
+            nav {
+                display: none;
+            }
+
+            .benefits {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="logo-container">
+                <img src="images/logo.png" alt="Bones Logo" class="logo">
+                <h1>Git for Authors</h1>
+            </div>
+            <nav>
+                <a href="index.html">Home</a>
+                <a href="#what-is-git">What is Git?</a>
+                <a href="#why-care">Why Care?</a>
+                <a href="#examples">Examples</a>
+            </nav>
+        </div>
+    </header>
+
+    <section class="hero">
+        <div class="container">
+            <h2>Version Control for Authors</h2>
+            <p>Track every change, never lose work, and fearlessly experiment with your manuscript</p>
+        </div>
+    </section>
+
+    <section id="what-is-git">
+        <div class="container">
+            <h2>What is Git?</h2>
+            <p>Git is a version control system - think of it as an unlimited "undo" button for your entire manuscript, combined with the ability to try different versions of your story without losing the original.</p>
+
+            <p>When you use Bones, every change you make to your manuscript can be saved as a "commit" - a snapshot of your work at that moment. You can always go back to any previous snapshot, compare different versions, or even work on multiple versions simultaneously.</p>
+
+            <div class="diagram-container">
+                <div class="diagram-title">Your Manuscript History</div>
+                <div class="mermaid">
+gitGraph
+    commit id: "Initial draft"
+    commit id: "Added Chapter 1"
+    commit id: "Added Chapter 2"
+    commit id: "Revised Chapter 1"
+    commit id: "Added Chapter 3"
+    commit id: "Final edits"
+                </div>
+            </div>
+
+            <p>Each circle above represents a saved version of your manuscript. You can jump back to any of these points at any time.</p>
+        </div>
+    </section>
+
+    <section id="why-care">
+        <div class="container">
+            <h2>Why Should Authors Care About Git?</h2>
+
+            <div class="benefits">
+                <div class="benefit-card">
+                    <h3><span class="benefit-icon">💾</span> Never Lose Work</h3>
+                    <p>Every version of your manuscript is saved. Accidentally deleted a chapter? Overwrote something important? Just go back to the previous version.</p>
+                </div>
+
+                <div class="benefit-card">
+                    <h3><span class="benefit-icon">🔄</span> Fearless Experimentation</h3>
+                    <p>Want to try killing off a character or rewriting Act 2? Create a branch, experiment freely, and keep or discard changes without affecting your main manuscript.</p>
+                </div>
+
+                <div class="benefit-card">
+                    <h3><span class="benefit-icon">📝</span> Track Changes Over Time</h3>
+                    <p>See exactly what you changed between drafts. Perfect for understanding your revision process or showing editors specific modifications.</p>
+                </div>
+
+                <div class="benefit-card">
+                    <h3><span class="benefit-icon">🤖</span> AI Editing Safety</h3>
+                    <p>When Bones runs AI editing, it creates a new branch. Review the AI's suggestions, accept what you like, and reject what you don't - the original is always safe.</p>
+                </div>
+
+                <div class="benefit-card">
+                    <h3><span class="benefit-icon">👥</span> Collaboration</h3>
+                    <p>Work with co-authors, editors, or beta readers. Each person can make changes without interfering with others' work.</p>
+                </div>
+
+                <div class="benefit-card">
+                    <h3><span class="benefit-icon">⏱️</span> Time Travel</h3>
+                    <p>Remember that scene you deleted three months ago? With Git, you can travel back in time and retrieve it.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="examples">
+        <div class="container">
+            <h2>Real-World Scenarios</h2>
+
+            <div class="scenario">
+                <h4>Scenario 1: Trying a Different Ending</h4>
+                <p>You're not sure if your protagonist should survive. Create a branch to try the tragic ending while keeping the happy ending safe.</p>
+
+                <div class="diagram-container">
+                    <div class="mermaid">
+gitGraph
+    commit id: "Chapter 20"
+    commit id: "Chapter 21"
+    branch alternate-ending
+    checkout alternate-ending
+    commit id: "Tragic ending draft"
+    commit id: "Polish tragic ending"
+    checkout main
+    commit id: "Happy ending draft"
+    commit id: "Polish happy ending"
+                    </div>
+                </div>
+
+                <p>Now you have both endings saved. Compare them, show them to beta readers, or pick the one that works best!</p>
+
+                <pre><code># Create a branch for the experiment
+git checkout -b alternate-ending
+
+# Work on your changes...
+# When done, either merge it:
+git checkout main
+git merge alternate-ending
+
+# Or discard it and keep the original:
+git checkout main
+git branch -D alternate-ending</code></pre>
+            </div>
+
+            <div class="scenario">
+                <h4>Scenario 2: AI Editing with Safety</h4>
+                <p>Bones' AI copy editor suggests changes to your prose. It automatically creates a branch so you can review before accepting.</p>
+
+                <div class="diagram-container">
+                    <div class="mermaid">
+gitGraph
+    commit id: "Your draft"
+    branch copyedit/20241121
+    checkout copyedit/20241121
+    commit id: "AI grammar fixes"
+    commit id: "AI clarity edits"
+    checkout main
+    merge copyedit/20241121 id: "Accept AI edits"
+    commit id: "Continue writing"
+                    </div>
+                </div>
+
+                <pre><code># Bones automatically runs:
+bones copyedit
+
+# Review the changes:
+git diff main
+
+# Accept all changes:
+git merge copyedit/20241121
+
+# Or accept only some changes:
+git checkout -p copyedit/20241121 -- src/</code></pre>
+            </div>
+
+            <div class="scenario">
+                <h4>Scenario 3: The "Oh No" Moment</h4>
+                <p>You've spent all day revising Chapter 5, but now you realize the original was better.</p>
+
+                <div class="diagram-container">
+                    <div class="mermaid">
+gitGraph
+    commit id: "Original Chapter 5"
+    commit id: "Revision attempt 1"
+    commit id: "Revision attempt 2" type: REVERSE
+    commit id: "Back to original" tag: "reverted"
+                    </div>
+                </div>
+
+                <p>With Git, you can simply revert to the original - nothing is ever truly lost!</p>
+
+                <pre><code># See your history
+git log --oneline
+
+# Go back to a specific version
+git checkout abc123 -- src/chapters/05-chapter-five.md
+
+# Or revert the last commit entirely
+git revert HEAD</code></pre>
+            </div>
+
+            <div class="scenario">
+                <h4>Scenario 4: Multiple Versions for Different Publishers</h4>
+                <p>You need a PG-13 version and an R-rated version of your novel. Use branches to maintain both!</p>
+
+                <div class="diagram-container">
+                    <div class="mermaid">
+gitGraph
+    commit id: "Core story"
+    commit id: "Add Chapter 3"
+    branch pg-13-version
+    branch r-rated-version
+    checkout pg-13-version
+    commit id: "Tone down violence"
+    commit id: "Remove swearing"
+    checkout r-rated-version
+    commit id: "Add mature scene"
+    commit id: "Gritty dialogue"
+    checkout main
+    commit id: "Fix typos"
+    checkout pg-13-version
+    merge main id: "Get typo fixes"
+    checkout r-rated-version
+    merge main id: "Get typo fixes"
+                    </div>
+                </div>
+
+                <p>Both versions share the same core story, but you can maintain different content levels and merge common fixes to both!</p>
+            </div>
+
+            <div class="tip">
+                <div class="tip-title">💡 Pro Tip: Commit Messages</div>
+                <p>Write meaningful commit messages like "Added backstory for villain in Chapter 3" instead of "Changes". Future you will thank present you when looking through history!</p>
+            </div>
+        </div>
+    </section>
+
+    <section>
+        <div class="container">
+            <h2>Nothing is Ever Lost</h2>
+            <p>The most important thing to understand about Git: <strong>once you commit something, it's saved forever</strong> (unless you explicitly delete it). You can experiment freely, make bold changes, and try crazy ideas - your original work is always there to return to.</p>
+
+            <div class="diagram-container">
+                <div class="diagram-title">Everything is Preserved</div>
+                <div class="mermaid">
+graph TD
+    A[Your Manuscript] --> B[Commit 1: First Draft]
+    B --> C[Commit 2: Added Chapter]
+    C --> D[Commit 3: Revisions]
+    D --> E[Commit 4: More Changes]
+
+    B -.->|Can always return here| Z[Previous Version]
+    C -.->|Can always return here| Z
+    D -.->|Can always return here| Z
+    E -.->|Current version| Y[Latest Work]
+
+    style B fill:#90EE90
+    style C fill:#90EE90
+    style D fill:#90EE90
+    style E fill:#90EE90
+    style Z fill:#FFD700
+    style Y fill:#87CEEB
+                </div>
+            </div>
+
+            <p>Think of Git as a time machine for your manuscript. Every saved state (commit) is a destination you can travel back to at any moment.</p>
+        </div>
+    </section>
+
+    <section>
+        <div class="container">
+            <h2>Getting Started with Bones</h2>
+            <p>Bones handles most of the Git complexity for you. Here are the basics:</p>
+
+            <pre><code># Initialize your book project (sets up Git automatically)
+bones init
+
+# Make changes to your manuscript...
+# Then save them:
+git add .
+git commit -m "Added Chapter 4: The Discovery"
+
+# Run AI editing (automatically creates a branch)
+bones copyedit
+
+# View the changes
+git diff main
+
+# Accept or reject as you see fit
+git merge copyedit/20241121  # Accept
+# OR
+git branch -D copyedit/20241121  # Reject</code></pre>
+
+            <div class="tip">
+                <div class="tip-title">🎯 Keep It Simple</div>
+                <p>You don't need to master Git to benefit from it. The three commands you'll use 90% of the time:</p>
+                <ul style="margin-top: 1rem; margin-left: 2rem;">
+                    <li><code>git add .</code> - Stage your changes</li>
+                    <li><code>git commit -m "message"</code> - Save a snapshot</li>
+                    <li><code>git diff</code> - See what changed</li>
+                </ul>
+                <p style="margin-top: 1rem;">Bones handles the rest automatically!</p>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <p><a href="index.html">← Back to Bones</a> | <a href="https://github.com/tsmarsh/bones">GitHub</a> | <a href="https://github.com/tsmarsh/bones/blob/main/README.md">Documentation</a></p>
+            <p style="margin-top: 1rem; opacity: 0.7;">&copy; 2024 Bones. Write fearlessly.</p>
+        </div>
+    </footer>
+</body>
+</html>
